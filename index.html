@@ -1,0 +1,817 @@
+<!DOCTYPE html>
+<html lang="hu">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kórélettan & Élettan - 330 Kérdéses Adatbázis & ZH Mód</title>
+    <style>
+        :root {
+            --primary: #8b0000;
+            --primary-light: #ff4d4d;
+            --bg: #121212;
+            --surface: #1e1e1e;
+            --surface-card: #252525;
+            --text: #e0e0e0;
+            --text-muted: #a0a0a0;
+            --correct: #2e7d32;
+            --incorrect: #c62828;
+            --border: #333333;
+            --accent: #d32f2f;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--bg);
+            color: var(--text);
+            margin: 0;
+            padding: 20px;
+            line-height: 1.6;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+        }
+
+        header {
+            text-align: center;
+            padding: 20px 0;
+            border-bottom: 2px solid var(--primary);
+            margin-bottom: 30px;
+        }
+
+        h1 {
+            color: var(--primary-light);
+            margin-bottom: 5px;
+        }
+
+        .subtitle {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+        }
+
+        .controls {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 25px;
+            flex-wrap: wrap;
+            justify-content: space-between;
+            align-items: center;
+            background-color: var(--surface);
+            padding: 15px;
+            border-radius: 8px;
+            border: 1px solid var(--border);
+        }
+
+        select, button.zh-btn {
+            background-color: var(--surface-card);
+            color: var(--text);
+            border: 1px solid var(--border);
+            padding: 10px 15px;
+            border-radius: 5px;
+            font-size: 0.95rem;
+            cursor: pointer;
+        }
+
+        button.zh-btn {
+            background-color: var(--primary);
+            color: white;
+            font-weight: bold;
+            border: none;
+            transition: background 0.2s;
+        }
+
+        button.zh-btn:hover {
+            background-color: var(--primary-light);
+        }
+
+        .category-group {
+            margin-bottom: 40px;
+        }
+
+        .category-title {
+            background-color: var(--primary);
+            color: white;
+            padding: 10px 15px;
+            border-radius: 6px;
+            font-size: 1.2rem;
+            margin-bottom: 20px;
+        }
+
+        .q-card {
+            background-color: var(--surface-card);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.3);
+        }
+
+        .q-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 15px;
+        }
+
+        .q-number {
+            font-weight: bold;
+            color: var(--primary-light);
+            margin-right: 10px;
+        }
+
+        .q-text {
+            font-size: 1.05rem;
+            font-weight: 500;
+            flex-grow: 1;
+        }
+
+        .options {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            margin-top: 15px;
+        }
+
+        .opt-btn {
+            background-color: var(--surface);
+            color: var(--text);
+            border: 1px solid var(--border);
+            padding: 12px 15px;
+            border-radius: 6px;
+            text-align: left;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            font-size: 0.95rem;
+        }
+
+        .opt-btn:hover {
+            background-color: #303030;
+            border-color: #555;
+        }
+
+        .opt-btn.selected {
+            border-color: var(--primary-light);
+            background-color: #382020;
+        }
+
+        .opt-btn.correct {
+            background-color: var(--correct) !important;
+            color: white;
+            border-color: var(--correct);
+        }
+
+        .opt-btn.incorrect {
+            background-color: var(--incorrect) !important;
+            color: white;
+            border-color: var(--incorrect);
+        }
+
+        .opt-btn.disabled {
+            cursor: not-allowed;
+            opacity: 0.8;
+        }
+
+        .explanation {
+            margin-top: 15px;
+            padding: 12px;
+            background-color: #2a2a2a;
+            border-left: 4px solid var(--primary-light);
+            border-radius: 4px;
+            font-size: 0.9rem;
+            display: none;
+        }
+
+        .stats {
+            font-weight: bold;
+            color: var(--primary-light);
+        }
+
+        .submit-zh-container {
+            text-align: center;
+            margin: 30px 0;
+        }
+
+        .submit-zh-btn {
+            background-color: var(--correct);
+            color: white;
+            font-size: 1.1rem;
+            font-weight: bold;
+            padding: 15px 30px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.5);
+        }
+
+        .submit-zh-btn:hover {
+            background-color: #388e3c;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Élettan & Kórélettan Adatbázis</h1>
+            <div class="subtitle">A vér, immunológia, immunbetegségek, szív és keringés élettana (330 kérdés)</div>
+        </header>
+
+        <div class="controls">
+            <div>
+                <label for="categoryFilter">Mód / Témakör: </label>
+                <select id="categoryFilter" onchange="handleModeChange()">
+                    <option value="all">Összes témakör (330 kérdés)</option>
+                    <option value="1">1. Vízterek és a vér összetétele</option>
+                    <option value="2">2. Vörösvértestek & Hemoglobin</option>
+                    <option value="3">3. Fehérvérsejtek & Gyulladás</option>
+                    <option value="4">4. Vérlemezkék & Véralvadás</option>
+                    <option value="5">5. Immunológiai alapok & Limfociták</option>
+                    <option value="6">6. Vércsoportok (ABO, Rh)</option>
+                    <option value="7">7. A szív anatómiája & Ingerületvezetés</option>
+                    <option value="8">8. Szívciklus, EKG & Hemodinamika</option>
+                    <option value="9">9. Érrendszer, Kapilláris-filtráció & Nyirok</option>
+                    <option value="10">10. Speciális keringések & Keringésszabályozás</option>
+                    <option value="11">11. Az immunrendszer betegségei</option>
+                </select>
+            </div>
+            <button class="zh-btn" onclick="startZhMode()">⚡ Új ZH Mód (10 random kérdés)</button>
+            <div class="stats" id="scoreBoard">
+                Kitöltve: 0 / 330 | Helyes: 0
+            </div>
+        </div>
+
+        <div id="questionsContainer"></div>
+        <div id="submitZhContainer" class="submit-zh-container" style="display: none;">
+            <button class="submit-zh-btn" onclick="submitZh()">ZH Beküldése & Értékelés</button>
+        </div>
+    </div>
+
+    <script>
+        const rawDatabase = [
+            // 1. Vízterek és a vér összetétele (30)
+            { cat: 1, q: "Egy egészséges, sovány férfi testtömegének hány százalékát alkotja folyadék?", opts: ["45%", "55%", "60%", "80%"], ans: 2, exp: "A férfiak testtömegének kb. 60%-a folyadék, míg a nőknél ez az arány kb. 55%." },
+            { cat: 1, q: "Egy átlagos felnőtt nő testtömegének hány százalékát alkotja folyadék?", opts: ["45%", "55%", "60%", "70%"], ans: 1, exp: "A nők testében a magasabb zsírarány miatt a vízszázalék kb. 55%." },
+            { cat: 1, q: "A szervezet teljes folyadéktérfogatának mekkora része található az intracelluláris térben?", opts: ["1/3 része", "1/2 része", "2/3 része", "80%-a"], ans: 2, exp: "A teljes folyadéktérfogat 2/3-a sejten belüli (intracelluláris), 1/3-a pedig sejten kívüli folyadék." },
+            { cat: 1, q: "A teljes testtömeg hány százalékát teszi ki az extracelluláris folyadék térfogata?", opts: ["4%", "16%", "20%", "60%"], ans: 2, exp: "Az extracelluláris folyadék a teljes testtömeg kb. 20%-át teszi ki." },
+            { cat: 1, q: "Az extracelluláris folyadéktér mekkora hányadát alkotja az intersticiális (szövet közötti) folyadék?", opts: ["20%", "60%", "80%", "91.5%"], ans: 2, exp: "Az extracelluláris folyadék 80%-a intersticiális folyadék, 20%-a pedig vérplazma." },
+            { cat: 1, q: "A teljes testtömeg hány százalékát adja az intersticiális folyadék önmagában?", opts: ["4%", "8%", "16%", "20%"], ans: 2, exp: "Az intersticiális folyadék a testtömeg kb. 16%-át adja." },
+            { cat: 1, q: "A teljes testtömeg hány százalékát adja a vérplazma térfogata?", opts: ["4%", "8%", "12%", "16%"], ans: 0, exp: "A vérplazma a testtömeg nagyjából 4%-át teszi ki." },
+            { cat: 1, q: "Átlagosan a teljes testtömeg hány százalékát adja maga a teljes vértérfogat?", opts: ["4%", "8%", "12%", "20%"], ans: 1, exp: "A vér a testtömeg nagyjából 8%-át teszi ki." },
+            { cat: 1, q: "Hány liternyi teljes vízmennyiség található egy 70 kg-os egészséges férfiban?", opts: ["28 liter", "35 liter", "42 liter", "50 liter"], ans: 2, exp: "70 kg * 0,60 = 42 liter." },
+            { cat: 1, q: "Hány liternyi intracelluláris folyadéknak felel meg egy 70 kg-os férfi víztere?", opts: ["14 liter", "28 liter", "42 liter", "8 liter"], ans: 1, exp: "42 liter 2/3-a = 28 liter." },
+            { cat: 1, q: "Hány liternyi az extracelluláris folyadéktér egy 70 kg-os férfiban?", opts: ["7 liter", "14 liter", "21 liter", "28 liter"], ans: 1, exp: "42 liter 1/3-a = 14 liter." },
+            { cat: 1, q: "Mekkora a vérplazma átlagos aránya a teljes vértérfogathoz képest?", opts: ["37-54%", "45%", "55%", "60%"], ans: 2, exp: "A vérplazma a vér térfogatának kb. 55%-át alkotja." },
+            { cat: 1, q: "Mekkora az alakos elemek átlagos térfogati aránya a vérben?", opts: ["30%", "45%", "55%", "70%"], ans: 1, exp: "Az alakos elemek a vér kb. 45%-át teszik ki." },
+            { cat: 1, q: "Mi a vérplazma legfőbb összetevője és mekkora annak az aránya?", opts: ["Fehérjék (7%)", "Víz (91,5%)", "Elektrolitok (1,5%)", "Albumin (60%)"], ans: 1, exp: "A vérplazma 91,5%-a víz, 7%-a fehérje és 1,5%-a egyéb oldott anyag." },
+            { cat: 1, q: "A vérplazma hány százalékát alkotják a plazmafehérjék?", opts: ["1,5%", "7%", "12%", "55%"], ans: 1, exp: "A plazmafehérjék a plazma kb. 7%-át adják." },
+            { cat: 1, q: "Melyik a legnagyobb mennyiségben jelen lévő plazmafehérje?", opts: ["Fibrinogén", "Globulinok", "Albumin", "Prothrombin"], ans: 2, exp: "Az albumin teszi ki a plazmafehérjék kb. 60%-át." },
+            { cat: 1, q: "A plazmafehérjék kb. hány százalékát teszik ki a globulinok?", opts: ["4%", "35%", "60%", "<1%"], ans: 1, exp: "A globulinok a plazmafehérjék kb. 35%-át adják." },
+            { cat: 1, q: "Milyen szerepet tölt be a plazmafehérjék kb. 4%-át alkotó fibrinogén?", opts: ["Tápanyagszállítás", "Véralvadás", "O2-kötés", "Enzimatikus emésztés"], ans: 1, exp: "A fibrinogén a véralvadás kulcsfehérjéje, a hálóváz alapanyaga." },
+            { cat: 1, q: "Melyik szerv termeli a plazmafehérjék (albumin, fibrinogén) döntő többségét?", opts: ["Lép", "Vese", "Máj", "Vörös csontvelő"], ans: 2, exp: "A plazmafehérjék zömét a máj szintetizálja." },
+            { cat: 1, q: "Mi az albuminok legfőbb élettani funkciója a keringésben?", opts: ["Oxigénszállítás", "Kolloidoszmotikus (onkotikus) nyomás fenntartása", "Véralvadási kaszkád", "Antigén-bemutatás"], ans: 1, exp: "Az albumin biztosítja a plazma kolloidoszmotikus nyomását." },
+            { cat: 1, q: "Milyen normál tartományban van a fehérvérsejtek száma 1 µl vérben?", opts: ["150 000 - 400 000", "5 000 - 10 000", "4,8 - 5,4 millió", "1 000 - 3 000"], ans: 1, exp: "A normál fehérvérsejtszám 5 000 – 10 000 db / µl." },
+            { cat: 1, q: "Milyen normál tartományban található a vörösvértestek száma 1 µl vérben?", opts: ["5 000 - 10 000", "150 000 - 400 000", "4,5 - 5,4 millió", "10 - 12 millió"], ans: 2, exp: "A vörösvértestszám normál értéke körülbelül 4,5 – 5,4 millió db / µl." },
+            { cat: 1, q: "Mennyi a vérlemezkék (trombociták) normál száma mikroliterenként?", opts: ["5 000 - 10 000", "150 000 - 400 000", "1 - 2 millió", "50 000 - 100 000"], ans: 1, exp: "A vérlemezkék normál száma 150 000 – 400 000 db / µl." },
+            { cat: 1, q: "Melyik szerv felelős a felnőttkori vérképzésért (hematopoezis)?", opts: ["Máj", "Lép", "Vörös csontvelő", "Csecsemőmirigy"], ans: 2, exp: "Felnőttkorban a vérképzés kizárólag a vörös csontvelőben zajlik." },
+            { cat: 1, q: "Mi történik a vérplazmával, ha eltávolítjuk belőle a fibrinogént?", opts: ["Trombussá válik", "Vérsavó (szérum) keletkezik", "Hematokrit nő", "Eritropoetin szabadul fel"], ans: 1, exp: "A fibrinogénmentes plazma a vérsavó (szérum)." },
+            { cat: 1, q: "Milyen elektrolit a legnagyobb koncentrációjú kation az extracelluláris térben?", opts: ["K+", "Na+", "Ca2+", "Mg2+"], ans: 1, exp: "Az extracelluláris tér fő kationja a nátrium (Na+)." },
+            { cat: 1, q: "Melyik kation a legfőbb az intracelluláris térben?", opts: ["Na+", "K+", "Ca2+", "Fe2+"], ans: 1, exp: "Az intracelluláris tér fő kationja a kálium (K+)." },
+            { cat: 1, q: "Milyen tartományban mozog a vérplazma normál pH értéke?", opts: ["6,8 - 7,0", "7,35 - 7,45", "7,8 - 8,0", "5,5 - 6,5"], ans: 1, exp: "A vér pH-ja szigorúan szabályozott: 7,35 – 7,45 közötti." },
+            { cat: 1, q: "A plazmafehérjék melyik csoportjába tartoznak az ellenanyagok (antitestek)?", opts: ["Albuminok", "Gamma-globulinok", "Fibrinogén", "Prothrombin"], ans: 1, exp: "Az antitestek az immunglobulinok, más néven gamma-globulinok." },
+            { cat: 1, q: "Milyen hatással van a plazmafehérjék szintjének lecsökkenése (hypoproteinaemia) a szövetekre?", opts: ["Kiszáradás", "Ödémaképződés (duzzanat)", "Magas vérnyomás", "Trombusképződés"], ans: 1, exp: "Az onkotikus nyomás leesése miatt a víz kiáramlik a szövetek közé (ödéma)." },
+
+            // 2. Vörösvértestek & Hemoglobin (30)
+            { cat: 2, q: "Mi a pontos élettani definíciója a hematokritnak?", opts: ["A plazmafehérjék aránya", "Az alakos elemek (főleg vvt) térfogati aránya a vérben", "A vvt-k átmérője", "A hemoglobin tömege"], ans: 1, exp: "A hematokrit az alakos elemek térfogataránya a teljes vérben." },
+            { cat: 2, q: "Mekkora a normál hematokrit érték nőkben?", opts: ["30-35%", "37-47%", "42-52%", "55-65%"], ans: 1, exp: "Nőkben a normál hematokrit érték kb. 37–47%." },
+            { cat: 2, q: "Mekkora a normál hematokrit érték férfiakban?", opts: ["30-35%", "37-47%", "42-52%", "55-65%"], ans: 2, exp: "Férfiakban a normál hematokrit érték kb. 42–52%." },
+            { cat: 2, q: "Mennyi a vörösvértestek átlagos élettartama a keringésben?", opts: ["9-11 nap", "30 nap", "120 nap", "Több mint 10 év"], ans: 2, exp: "A vörösvértestek körülbelül 120 napig keringnek a vérben." },
+            { cat: 2, q: "Milyen alaki és szerkezeti jellemzője van az érett emberi vörösvértestnek?", opts: ["Gömb alakú, magvas", "Sejtmag nélküli, bikonkáv (fánk) alakú", "Karéjos magvú, amőboid", "Magvas, csillós"], ans: 1, exp: "Az érett vörösvértest sejtmag nélküli, bikonkáv fánk alakú sejt." },
+            { cat: 2, q: "Hogyan nevezzük a sejtmagját nemrég elveszített, fiatal vörösvértestet?", opts: ["Erythroblast", "Retikulocita", "Megakariocita", "Monocita"], ans: 1, exp: "Az erythroblast magvesztése után keletkező fiatal alak a retikulocita." },
+            { cat: 2, q: "Milyen arányban vannak jelen a retikulociták a perifériás vérben normálisan?", opts: ["0,5 - 1,5%", "5 - 10%", "15 - 20%", "0%"], ans: 0, exp: "A retikulociták aránya a vvt-k kb. 0,5–1,5%-a." },
+            { cat: 2, q: "Hol és milyen ingerre termelődik az eritropoetin (EPO) hormon?", opts: ["Májban, magas O2 szintre", "Vesében, O2 hiányra (hipoxia)", "Csontvelőben, alacsony Ca2+-ra", "Lépben, fertőzésekre"], ans: 1, exp: "Az EPO a vesében termelődik válaszul a szöveti oxigénhiányra (hipoxia)." },
+            { cat: 2, q: "Milyen szerkezetű a felnőtt hemoglobin (HbA) fehérjerésze?", opts: ["2 α és 2 β láncból álló tetramer", "4 α láncból álló fehérje", "1 α és 1 β lánc dimerje", "2 γ és 2 β lánc"], ans: 0, exp: "A felnőtt hemoglobin 4 fehérjeláncból áll: 2 alpha és 2 beta láncból (α2β2)." },
+            { cat: 2, q: "Milyen globinláncokat tartalmaz a magzati hemoglobin (HbF)?", opts: ["2 α és 2 β", "2 α és 2 γ", "2 β és 2 γ", "4 γ lánc"], ans: 1, exp: "A magzati HbF szerkezete α2γ2." },
+            { cat: 2, q: "Mi adja a hem csoport oxigénkötő képességét?", opts: ["Kalciumion", "Vastartalmú porfirinváz (Fe2+)", "Magvas enzim", "Fibrin szálak"], ans: 1, exp: "A hem egy kétértékű vasat (Fe2+) tartalmazó porfirinváz." },
+            { cat: 2, q: "Hány O2 molekulát tud megkötni egyetlen teljes hemoglobin tetramer?", opts: ["1", "2", "4", "8"], ans: 2, exp: "A 4 hem csoport mindegyike 1 O2-t köt, így összesen 4 O2 molekulát." },
+            { cat: 2, q: "Milyen molekuláris hiba okozza a sarlósejtes vérszegénységet?", opts: ["α-lánc hiánya", "β-lánc 6. aminosavának pontmutációja", "Vasion hiánya", "Sejtmag megmaradása"], ans: 1, exp: "A sarlósejtes anaemia a hemoglobin béta-láncának 6. aminosav-pontmutációja." },
+            { cat: 2, q: "Mi a vérszegénység (anaemia) lényege?", opts: ["Magas fehérvérsejtszám", "Alacsony vvt-szám vagy Hb-tartalom (romlik az O2-ellátás)", "Vérlemezkék hiánya", "Plazma vízhiánya"], ans: 1, exp: "Az anaemia a vvt-k alacsony számára vagy hiányos hemoglobintartalmára utal." },
+            { cat: 2, q: "Milyen vitamin hiánya okoz vészes vérszegénységet (anaemia perniciosa)?", opts: ["C-vitamin", "B12-vitamin és folsav", "K-vitamin", "D-vitamin"], ans: 1, exp: "A B12-vitamin és folsav hiánya gátolja a DNS-szintézist és a vvt-k érését." },
+            { cat: 2, q: "Milyen gyomornedv-összetevő szükséges a B12-vitamin felszívódásához?", opts: ["Sósav", "Intrinsic faktor (IF)", "Pepsin", "Gastrin"], ans: 1, exp: "A parietalissejtek által termelt Intrinsic Faktor köti a B12-vitamint." },
+            { cat: 2, q: "Hol zajlik az elöregedett vörösvértestek lebontása?", opts: ["Tüdőben és vesében", "Lép, máj és csontvelő makrofágjaiban", "Nyirokcsomókban", "Vékonybélben"], ans: 1, exp: "Az elöregedett vvt-ket a lép, a máj és a csontvelő makrofágjai kebelezik be." },
+            { cat: 2, q: "Mi lesz a hemoglobin globin részéből a lebontás során?", opts: ["Bilirubin", "Aminosavak (újrahasznosulnak)", "Urobilinogen", "Széklettel távozik"], ans: 1, exp: "A globin aminosavakra hidrolizál, amiket a szervezet újra felhasznál." },
+            { cat: 2, q: "Milyen szállítófehérje viszi a hemből származó vasat (Fe3+) a vérben?", opts: ["Ferritin", "Transferrin", "Albumin", "Trombomodulin"], ans: 1, exp: "A vasat a vérplazmában a transferrin szállítja." },
+            { cat: 2, q: "Hol és milyen formában tárolódik a felesleges vas?", opts: ["Vesében transferrinként", "Májban ferritin formájában", "Lépben bilirubinként", "Csontben urobilinként"], ans: 1, exp: "A vas a májban tárolódik ferritin formájában." },
+            { cat: 2, q: "Milyen zöldes, majd sárgás epepigmentté alakul a porfirinváz?", opts: ["Biliverdinből Bilirubin", "Stercobilinből Urobilin", "Globinból Hem", "Ferritinből Transferrin"], ans: 0, exp: "A hem porfirinváza biliverdinné, majd bilirubinná alakul át." },
+            { cat: 2, q: "Hova kerül a májból kikerülő konjugált bilirubin?", opts: ["Vizeletbe vesén át", "Epén keresztül a vékonybélbe", "Vissza csontvelőbe", "Tüdőbe kilégzésre"], ans: 1, exp: "A máj a bilirubint az epébe választja ki, így a vékonybélbe jut." },
+            { cat: 2, q: "Mi adja a széklet jellegzetes barnás színét?", opts: ["Stercobilin", "Urobilin", "Transferrin", "Bilirubin"], ans: 0, exp: "A bélbaktériumok által átalakított stercobilin adja a széklet színét." },
+            { cat: 2, q: "Melyik molekula adja a vizelet sárgás színét?", opts: ["Ferritin", "Biliverdin", "Urobilin", "Fibrin"], ans: 2, exp: "Az urobilinogen felszívódó része a vesén át urobilinként ürül." },
+            { cat: 2, q: "Milyen állapotot nevezünk sárgaságnak (icterus)?", opts: ["Magas vasszint", "Bilirubin felszaporodása a vérben és szövetekben", "Alacsony hemoglobin", "Túl sok leukocita"], ans: 1, exp: "A bilirubin felszaporodása a bőrt és a szemfehérjét sárgára színezi." },
+            { cat: 2, q: "Mi történik a hemoglobin kötőképességével szén-monoxid (CO) mérgezéskor?", opts: ["CO2-t nem tud kötni", "A CO 200-szor erősebben kötődik a hemhez, mint az O2 (karboxi-hemoglobin)", "Rákkeltővé válik", "Gyors alvadás lép fel"], ans: 1, exp: "A CO rendkívül nagy affinitással kötődik a hemhez." },
+            { cat: 2, q: "Hogyan nevezzük a 3-értékű vasat (Fe3+) tartalmazó, oxigénkötésre képtelen hemoglobint?", opts: ["Oxi-hemoglobin", "Karbamino-hemoglobin", "Methemoglobin", "Karboxi-hemoglobin"], ans: 2, exp: "A methemoglobinban a vas Fe3+ állapotú, ami képtelen O2 szállítani." },
+            { cat: 2, q: "Mi a vörösvértestek süllyedési sebességének (We) klinikai jelentősége?", opts: ["Véralvadási zavar jele", "Nem-specifikus gyulladásos jelzőérték (emelkedése gyulladásra utal)", "Vércsoportot határoz meg", "Vesebetegség szűrője"], ans: 1, exp: "A megemelkedett süllyedés gyulladásos vagy daganatos folyamatot jelez." },
+            { cat: 2, q: "Hogyan reagál a bikonkáv vvt hipertóniás (tömény) oldatba helyezve?", opts: ["Kidurran (hemolízis)", "Vizet veszít és zsugorodik", "Változatlan marad", "Megduzzad"], ans: 1, exp: "Hipertóniás közegben az ozmózis miatt víz áramlik ki a sejtből." },
+            { cat: 2, q: "Mi történik a vvt-vel hipotóniás (híg) oldatban?", opts: ["Vizet vesz fel, megduzzad és kidurran (hemolízis)", "Zsugorodik", "Megkeményedik", "Eritropoetint termel"], ans: 0, exp: "Hipotóniás közegben víz áramlik be a sejtbe, ami hemolízishez vezet." },
+
+            // 3. Fehérvérsejtek & Gyulladás (30)
+            { cat: 3, q: "A fehérvérsejtek hány százalékát teszik ki a granulociták?", opts: ["20-30%", "50-70%", "60-80%", "<1%"], ans: 2, exp: "A granulociták a fehérvérsejtek 60–80%-át alkotják." },
+            { cat: 3, q: "Melyik a leggyakoribb granulocita típus a vérben (50-70%)?", opts: ["Eozinofil", "Bazofil", "Neutrofil", "Monocita"], ans: 2, exp: "A neutrofil granulocita a legnépesebb fehérvérsejt csoport (50-70%)." },
+            { cat: 3, q: "Milyen becenevet adnak a neutrofil granulocitáknak?", opts: ["Makrofágok", "Mikrofágok", "Plazmasejtek", "Hízósejtek"], ans: 1, exp: "A neutrofileket 'mikrofágoknak' is nevezik." },
+            { cat: 3, q: "Milyen anyagokat tartalmaznak a neutrofil granulociták granulumai?", opts: ["Hisztamin és heparin", "Proteolitikus enzimek, lizozim, oxidánsok", "Perforin és granzim", "EPO és trombopoetin"], ans: 1, exp: "A neutrofil granulumok emésztőenzimeket, lizozimot és oxidánsokat tartalmaznak." },
+            { cat: 3, q: "Milyen állapot jele lehet a megemelkedett neutrofilszám?", opts: ["Bakteriális fertőzés, gyulladás, stressz", "Parazita fertőzés", "Allergiás sokk", "Vírusfertőzés"], ans: 0, exp: "Bakteriális fertőzések és akut gyulladások hatására a neutrofilek száma nő." },
+            { cat: 3, q: "Melyik granulocita véd a parazita fertőzések ellen?", opts: ["Neutrofil", "Eozinofil", "Bazofil", "NK-sejt"], ans: 1, exp: "Az eozinofil granulociták a paraziták elleni védekezésre specializálódtak." },
+            { cat: 3, q: "Milyen enzimet bocsátanak ki az eozinofil granulociták az allergia mérséklésére?", opts: ["Lizozim", "Hisztamináz", "Plazmin", "Kallikrein"], ans: 1, exp: "Az eozinofilek hisztaminázt szabadítanak fel, ami bontja a hisztamint." },
+            { cat: 3, q: "Melyik fehérvérsejt aránya kevesebb, mint 1% a perifériás vérben?", opts: ["Neutrofil", "Eozinofil", "Bazofil", "Monocita"], ans: 2, exp: "A bazofil granulocita a legritkább (<1%)." },
+            { cat: 3, q: "Melyik szöveti sejtre hasonlítanak a bazofil granulociták?", opts: ["Fibroblasztok", "Hízósejtek (mast cells)", "Makrofágok", "Plazmasejtek"], ans: 1, exp: "A bazofilek a hízósejtekhez hasonlítanak, hisztamint és heparint tartalmaznak." },
+            { cat: 3, q: "Milyen hatást fejt ki a hisztamin az erekre?", opts: ["Érszűkület", "Értágulat (vazodilatáció) és áteresztőképőség-növekedés", "Véralvadás beindítása", "Sejtképzés"], ans: 1, exp: "A hisztamin értágulatot vált ki és növeli a kapillárisok permeabilitását." },
+            { cat: 3, q: "Mivé alakulnak át a monociták (2-8%) a szövetekben?", opts: ["Bazofil granulocitává", "Szöveti makrofággá", "T-limfocitává", "Vérlemezkévé"], ans: 1, exp: "A monociták a szövetekbe lépve szöveti makrofágokká alakulnak." },
+            { cat: 3, q: "Hogyan nevezzük a máj sajátos, fixált makrofágjait?", opts: ["Alveoláris makrofág", "Kupffer-sejt", "Langerhans-sejt", "Microglia"], ans: 1, exp: "A máj rögzült makrofágjai a Kupffer-sejtek." },
+            { cat: 3, q: "Hogyan nevezzük a központi idegrendszer fagocitáló sejtjeit?", opts: ["Microglia", "Astrocyta", "Kupffer-sejt", "Langerhans-sejt"], ans: 0, exp: "Az agy és gerincvelő makrofágjai a microglia sejtek." },
+            { cat: 3, q: "Mi a kemotaxis jelensége?", opts: ["O2-kötés", "Irányított sejtvándorlás kémiai ingerek felé", "Elhalás", "Ellenanyag-termelés"], ans: 1, exp: "A kemotaxis a fagocitáló sejtek kémiai ingerek irányába történő mozgása." },
+            { cat: 3, q: "Hogyan nevezzük azt a folyamatot, mikor a fehérvérsejtek kijutnak az ép érfalon át?", opts: ["Phagocytosis", "Diapedesis (extravasatio)", "Hemolízis", "Agglutináció"], ans: 1, exp: "A leukociták érfalon való átpréselődése a diapedesis." },
+            { cat: 3, q: "Melyik NEM tartozik a gyulladás 4 klasszikus helyi tünete közé?", opts: ["Pír (Rubor)", "Melegség (Calor)", "Duzzanat (Tumor)", "Sápadtság (Pallor)"], ans: 3, exp: "Klasszikus tünetek: Rubor, Calor, Tumor, Dolor." },
+            { cat: 3, q: "Mi a gyulladás 5. felismert tünete?", opts: ["Fájdalom", "Funkciókiesés (Functio laesa)", "Láz", "Hidegrázás"], ans: 1, exp: "Ötödik tünetként a funkciókárosodást (Functio laesa) írták le." },
+            { cat: 3, q: "Mi okozza a gyulladásos duzzanatot (tumort)?", opts: ["Vvt-k felhalmozódása", "Kiáramló vérplazma (ödéma)", "Csontvelő túltermelése", "Fibrin lebomlása"], ans: 1, exp: "Az megnövekedett kapilláris-permeabilitás miatt plazma szivárog a szövet közé." },
+            { cat: 3, q: "Mi okozza a gyulladásos bőrpírt (rubort) és melegséget (calort)?", opts: ["Érszűkület", "Helyi értágulat és megnövekedett véráramlás (hyperaemia)", "Vérlemezke dugó", "Idegpusztulás"], ans: 1, exp: "A vazodilatáció miatt megnő a vérátáramlás." },
+            { cat: 3, q: "Melyik NEM része a nem-specifikus (veleszületett) immunválasznak?", opts: ["Bőr és csillók", "Gyulladásos mediátorok", "B-sejtek specifikus ellenanyagai", "Neutrofilek fagocitózisa"], ans: 2, exp: "A B-sejtek ellenanyagai a specifikus (adaptív) immunválaszhoz tartoznak." },
+            { cat: 3, q: "Milyen gyors a természetes immunválasz?", opts: ["Azonnali", "1 héten belül", "Több hónap", "Csak emlékeztető oltás után"], ans: 0, exp: "A természetes immunválasz azonnal reagál." },
+            { cat: 3, q: "Hagy-e memóriát a nem-specifikus immunválasz?", opts: ["Igen", "Nem, lecseng és nincs memória", "Csak vírusnál", "Csak T-sejteknél"], ans: 1, exp: "A nem-specifikus válasz lecsengése után nem hagy maga után memóriát." },
+            { cat: 3, q: "Mit jelent a 'balra tolt' minőségi vérkép?", opts: ["Minden fvs csökken", "Fiatal, nem teljesen érett neutrofil granulociták (stab) megjelenése", "T-sejtek szaporodása", "Vvt-k hiánya"], ans: 1, exp: "Akut fertőzésben a csontvelő éretlen neutrofileket ürít a vérbe." },
+            { cat: 3, q: "Miből áll a genny (pus) túlnyomó része?", opts: ["Plazmafehérjékből", "Elhalt neutrofil granulocitákból, kórokozókból és sejttörmelékből", "Vörösvértestekből", "B-limfocitákból"], ans: 1, exp: "A genny a fagocitózis során elhalt neutrofilek tömege." },
+            { cat: 3, q: "Melyik fehérvérsejt-típus aránya 20-40% a vérben?", opts: ["Neutrofil", "Limfocita", "Monocita", "Eozinofil"], ans: 1, exp: "A limfociták a második leggyakoribb sejtcsoport (20-40%)." },
+            { cat: 3, q: "Mi a leukopenia?", opts: ["Fehérvérsejtszám megemelkedése", "Fehérvérsejtszám kóros lecsökkenése (<5000/µl)", "Vörösvértest hiány", "Trombocita hiány"], ans: 1, exp: "A leukopenia a fehérvérsejtek alacsony számát jelenti." },
+            { cat: 3, q: "Mi a leukocytosis?", opts: ["Fehérvérsejtszám élettani vagy kóros megemelkedése (>10 000/µl)", "Vérzékenység", "Sárgaság", "Csonteredetű anaemia"], ans: 0, exp: "A leukocytosis a megemelkedett fehérvérsejtszám." },
+            { cat: 3, q: "Milyen anyagnak van központi szerepe a láz (febris) kiváltásában az hipotalamuszban?", opts: ["Prostaglandinok és pirogének (pl. IL-1, TNF-alfa)", "Hisztamin", "Heparin", "Fibrinogén"], ans: 0, exp: "A gyulladásos pirogének prostaglandin E2-t indukálnak az agyban." },
+            { cat: 3, q: "Mi a lizozim enzim szerepe?", opts: ["Véralvadás", "Baktériumok sejtfalának (peptidoglikán) bontása", "Vas-szállítás", "Hisztamin-termelés"], ans: 1, exp: "A lizozim elpusztítja a baktériumok sejtfalát." },
+            { cat: 3, q: "Hogyan nevezzük a kötőszövetben rögzült makrofágokat?", opts: ["Histiocyta", "Microglia", "Osteoclast", "Kupffer-sejt"], ans: 0, exp: "A kötőszöveti makrofág neve histiocyta." },
+
+            // 4. Vérlemezkék & Véralvadás (30)
+            { cat: 4, q: "Melyik sejt szétesésével keletkeznek a trombociták?", opts: ["Erythroblast", "Megakariocita", "Monocita", "Limfoblaszt"], ans: 1, exp: "A trombociták a megakariociták plazmájából lefűződő töredékek." },
+            { cat: 4, q: "Mennyi a vérlemezkék élettartama?", opts: ["120 nap", "9-11 nap", "<12 óra", "Több év"], ans: 1, exp: "A vérlemezkék élettartama mindössze 9–11 nap." },
+            { cat: 4, q: "Mi a hemosztázis első lépése sérüléskor?", opts: ["Fibrinolízis", "Helyi érreakció (reflexes vazokonstrikció)", "Vörös trombus", "Plazmin aktiváció"], ans: 1, exp: "Első lépés a reflexes vazokonstrikció (érszűkület)." },
+            { cat: 4, q: "Hogyan nevezzük a trombocita-reakció elsődleges alvadékát?", opts: ["Vörös trombus", "Fehér trombus (trombusdugó)", "Fibrinháló", "Plazmin alvadék"], ans: 1, exp: "A vérlemezkék összetapadásával létrejövő dugó a fehér trombus." },
+            { cat: 4, q: "Milyen anyagra tapadnak rá a trombociták a sérült érfalban (adhézió)?", opts: ["Endothel sejtekre", "Subendothelialis kollagén rostokra", "Simaizomra", "Fibrinre"], ans: 1, exp: "A sérüléskor kiszabaduló kollagénhez tapadnak a trombociták." },
+            { cat: 4, q: "Milyen fehérje közvetíti a trombociták kollagénhez való kötődését?", opts: ["von Willebrand faktor (vWF)", "Fibrinogén", "Albumin", "Trombin"], ans: 0, exp: "A vWF híd szerepet tölt be a kollagén és a trombociták között." },
+            { cat: 4, q: "Milyen anyagokat szabadítanak fel az aktivált trombociták?", opts: ["ADP, szerotonin, tromboxán A2", "Hisztamin és heparin", "EPO és bilirubin", "Transferrin és ferritin"], ans: 0, exp: "Az aktivált trombociták ADP-t, szerotonint és tromboxán A2-t bocsátanak ki." },
+            { cat: 4, q: "Milyen gyógyszer gátolja a tromboxán A2 szintézisét vérrögképződés ellen?", opts: ["Aspirin (acetilszalicilsav)", "Paracetamol", "Heparin", "Vitamin K"], ans: 0, exp: "Az Aspirin kis dózisban gátolja a ciklooxigenázt." },
+            { cat: 4, q: "Hány véralvadási faktor van a kaszkádban?", opts: ["4", "8", "12", "20"], ans: 2, exp: "A véralvadási kaszkádot 12 faktor alkotja." },
+            { cat: 4, q: "Melyik ion elengedhetetlen a véralvadáshoz (IV. faktor)?", opts: ["Na+", "K+", "Ca2+", "Fe3+"], ans: 2, exp: "A kalciumionok (Ca2+) jelenléte elengedhetetlen a véralvadáshoz." },
+            { cat: 4, q: "Melyik vitamin kell az alvadási faktorok (II, VII, IX, X) szintéziséhez?", opts: ["A-vitamin", "C-vitamin", "D-vitamin", "K-vitamin"], ans: 3, exp: "A K-vitamin elengedhetetlen a májban ezen faktorok szintéziséhez." },
+            { cat: 4, q: "Mi indítja be a véralvadás 'külső útját' (extrinsic)?", opts: ["Üvegfelület", "Sérült sejtfelszín / szöveti faktor (TF / III. faktor)", "I. faktor autoaktiváció", "Trombomodulin"], ans: 1, exp: "A külső utat a sérült szövetekből felszabaduló szöveti faktor indítja el." },
+            { cat: 4, q: "Mi indítja be a véralvadás 'belső útját' (intrinsic)?", opts: ["Szöveti faktor", "Negatív töltésű felületekkel való érintkezés (XII. faktor)", "Kalcium hiánya", "Plazmin"], ans: 1, exp: "A belső út a XII. faktor felületi kontaktusával indul." },
+            { cat: 4, q: "Melyik enzim alakítja a fibrinogént fibrinné?", opts: ["Plazmin", "Trombin (IIa faktor)", "Kallikrein", "Lizozim"], ans: 1, exp: "A trombin enzim hasítja le a fibrinogént, kialakítva a fibrin szálakat." },
+            { cat: 4, q: "Hogyan nevezzük az inaktív előalakot, amiből a trombin keletkezik?", opts: ["Fibrinogén", "Prothrombin (II. faktor)", "Plazminogén", "Kallikrein"], ans: 1, exp: "A prothrombinból jön létre a trombin." },
+            { cat: 4, q: "Miből áll a 'vörös trombus'?", opts: ["Kizárólag trombocitákból", "Fibrinhálóból és csapdázott vvt-kből", "Mészből", "Fehérvérsejtekből"], ans: 1, exp: "A vörös trombus fibrinhálóból és abban fennmaradt vörösvértestekből áll." },
+            { cat: 4, q: "Mi marad vissza a vérből az alvadék kiválása után?", opts: ["Vérplazma", "Vérsavó (szérum)", "Intersticiális folyadék", "Nyirok"], ans: 1, exp: "Az alvadás után visszamaradó, fibrinogénmentes folyadék a vérsavó." },
+            { cat: 4, q: "Hogyan nevezzük a fibrinszálak enzimatikus lebontását?", opts: ["Hemosztázis", "Fibrinolízis", "Aggregáció", "Phagocytosis"], ans: 1, exp: "A fibrin alvadék feloldása a fibrinolízis." },
+            { cat: 4, q: "Melyik enzim végzi a trombus megemésztését?", opts: ["Plazmin", "Trombin", "Antitrombin", "Hisztamináz"], ans: 0, exp: "A plazminogénből keletkező plazmin bontja le a fibrint." },
+            { cat: 4, q: "Milyen vegyületek gátolják in vitro a véralvadást Ca2+ megkötésével?", opts: ["Heparin", "EDTA, Na-citrát, oxalátok", "K-vitamin", "Aspirin"], ans: 1, exp: "Az EDTA, Na-citrát és oxalátok Ca2+ megkötésével gátolják az alvadást." },
+            { cat: 4, q: "Milyen hatású a heparin?", opts: ["Ca2+ megkötő", "Fokozza az antitrombin III hatását, inaktiválva a trombint", "K-vitamin antagonista", "Fibrin képző"], ans: 1, exp: "A heparin az antitrombin III aktivitását sokszorozza meg." },
+            { cat: 4, q: "Milyen hatású a dikumarol és a warfarin?", opts: ["Ca2+ megkötő", "K-vitamin antagonisták", "Trombocita-romboló", "Fibrin-oldó"], ans: 1, exp: "A dikumarol származékok K-vitamin antagonisták." },
+            { cat: 4, q: "Mi a hemofília A (vérzékenység) oka?", opts: ["VIII. véralvadási faktor öröklött hiánya", "IX. faktor hiánya", "K-vitamin hiány", "C-vitamin hiány"], ans: 0, exp: "A hemofília A a VIII. faktor hiánya." },
+            { cat: 4, q: "Mi a hemofília B oka?", opts: ["VIII. faktor hiánya", "IX. véralvadási faktor öröklött hiánya", "XI. faktor hiánya", "Trombocitahiány"], ans: 1, exp: "A hemofília B a IX. faktor öröklött hiánya." },
+            { cat: 4, q: "Mi a trombocytopenia?", opts: ["Vérlemezkék számának kóros lecsökkenése (<150 000/µl)", "Magas trombocitaszám", "K-vitamin túlsúly", "Fehérvérsejt-hiány"], ans: 0, exp: "A trombocytopenia az alacsony vérlemezkebecslést jelenti." },
+            { cat: 4, q: "Mi a thrombus?", opts: ["Kiszabadult és továbbsodródó vérrög", "Az érrendszerben az érfalhoz tapadó, éren belüli vérrög", "Szövetközti vérömleny", "Plazmafehérje aggregátum"], ans: 1, exp: "A thrombus az éren belül helyben keletkező vérrög." },
+            { cat: 4, q: "Mi az embolus?", opts: ["Érfalhoz tapadó rög", "A vérárammal elsodródott és távolabbi eret elzáró anyag", "Glikolipid", "Seb alvadéka"], ans: 1, exp: "Az embolus a vérpályában tovasodródó és beékelődő rög." },
+            { cat: 4, q: "Milyen fehérje bontja az aktivált V. és VIII. véralvadási faktorokat?", opts: ["Protein C és Protein S", "Plazmin", "Albumin", "Fibrinogén"], ans: 0, exp: "Az aktivált Protein C (APC) lebontja az Va és VIIIa faktorokat." },
+            { cat: 4, q: "Milyen vizsgálattal mérhető a véralvadás külső (extrinsic) útjának működése?", opts: ["Prothrombin idő (PI / INR)", "APTI", "Vérzési idő", "Süllyedés"], ans: 0, exp: "A prothrombin idő (INR) a külső alvadási utat méri." },
+            { cat: 4, q: "Milyen vizsgálat méri a belső (intrinsic) alvadási utat?", opts: ["INR", "APTI (Aktivált parciális tromboplasztin idő)", "Vörösvértest süllyedés", "Hematokrit"], ans: 1, exp: "Az APTI a belső alvadási út integritását vizsgálja." },
+
+            // 5. Immunológiai alapok & Limfociták (30)
+            { cat: 5, q: "Mi az antigén (immunogén) definíciója?", opts: ["Saját fehérje", "Molekula, amit az immunrendszer felismer és immunválaszt vált ki", "Plazmafehérje", "Alvadási faktor"], ans: 1, exp: "Antigén minden olyan anyag, amit az immunrendszer felismer." },
+            { cat: 5, q: "Mi az epitop?", opts: ["Haptén", "Az antigén antitest-kötő specifikus felszíni része", "Fc-régió", "TCR"], ans: 1, exp: "Az antigén antitesthez kötődő felszíni része az epitop." },
+            { cat: 5, q: "Mi az immunológiai tolerancia?", opts: ["Heves válasz", "Ha az immunrendszer NEM reagál egy adott anyagra", "B-sejt elhalás", "Kórokozó szaporodás"], ans: 1, exp: "Tolerancia esetén az immunrendszer nem indít váreszt adott anyagra." },
+            { cat: 5, q: "Hol érnek éretté a T-limfociták?", opts: ["Csontvelőben", "Csecsemőmirigyben (Thymus)", "Lépben", "Nyirokcsomóban"], ans: 1, exp: "A T-sejtek a csecsemőmirigyben érnek éretté." },
+            { cat: 5, q: "Hol éretté a B-limfociták emlősökben?", opts: ["Csecsemőmirigyben", "Vörös csontvelőben (Bone marrow)", "Lépben", "Vékonybélben"], ans: 1, exp: "A B-sejtek érése a vörös csontvelőben zajlik." },
+            { cat: 5, q: "Milyen immunválaszt közvetítenek a B-limfociták?", opts: ["Sejtes (celluláris)", "Humorális (ellenanyag-közvetített)", "Nem-specifikus", "Láz"], ans: 1, exp: "A B-sejtek szekretált ellenanyagok révén a humorális válaszért felelősek." },
+            { cat: 5, q: "Mivé alakulnak az aktivált B-sejtek az ellenanyag-termeléshez?", opts: ["Makrofággá", "Plazmasejtté", "T-helperré", "Megakariocitává"], ans: 1, exp: "Az aktivált B-sejtek antitesttermelő plazmasejtekké alakulnak." },
+            { cat: 5, q: "Miből áll egy alapvető IgG ellenanyag molekula?", opts: ["4 nehéz lánc", "2 egyforma nehéz (H) és 2 egyforma könnyű (L) lánc", "1 nehéz és 3 könnyű", "Szénhidrátok"], ans: 1, exp: "Az antitestek 2 nehéz (H) és 2 könnyű (L) láncból álló Y-alakú fehérjék." },
+            { cat: 5, q: "Az antitest melyik része köt specifikusan az antigénhez?", opts: ["Fc régió", "Fab variábilis (V) régiója", "Hinge régió", "CH3 tartomány"], ans: 1, exp: "Az antigénkötő helyeket a Fab régió variábilis szakasza alkotja." },
+            { cat: 5, q: "Melyik immunglobulin jut át a placentán az anyából a magzatba?", opts: ["IgM", "IgA", "IgG", "IgE"], ans: 2, exp: "Kizárólag az IgG képes átjutni a placentán." },
+            { cat: 5, q: "Milyen szerkezetű az IgM a keringésben?", opts: ["Monomer", "Dimer", "Pentamer (5 alapegység)", "Trimer"], ans: 2, exp: "Az IgM 5 alapegységből álló pentamer molekula." },
+            { cat: 5, q: "Melyik immunglobulin jelenik meg elsőként az primer immunválasz során?", opts: ["IgG", "IgM", "IgA", "IgE"], ans: 1, exp: "A korai immunválasz fő immunglobulinja az IgM." },
+            { cat: 5, q: "Melyik immunglobulin van jelen a nyálban és anyatejben (dimer formában)?", opts: ["IgA", "IgE", "IgD", "IgG"], ans: 0, exp: "Az IgA a szekrétumok fő immunglobulinja." },
+            { cat: 5, q: "Melyik immunglobulin felelős az allergiás reakciókért?", opts: ["IgG", "IgM", "IgE", "IgA"], ans: 2, exp: "Az IgE az allergiás válaszreakciók mediátora." },
+            { cat: 5, q: "Köt-e a T-sejt receptor (TCR) szabad oldott antigént?", opts: ["Igen", "Nem, csak MHC-vel bemutatott peptidhez köt", "Csak Ca2+-al", "Csak IgM-el"], ans: 1, exp: "A T-sejtek kizárólag az MHC által bemutatott peptideket ismerik fel." },
+            { cat: 5, q: "Mely sejteken vannak MHC-I glikoproteinek?", opts: ["Csak B-sejten", "Csak makrofágon", "Szinte minden magvas sejten", "Csak vvt-n"], ans: 2, exp: "MHC-I a szervezet szinte minden magvas sejtjén jelen van." },
+            { cat: 5, q: "Hol fordulnak elő elsősorban az MHC-II molekulák?", opts: ["Minden magvas sejten", "Szívizmon", "Antigén prezentáló sejteken (APC)", "Vvt-n"], ans: 2, exp: "Az MHC-II az antigén-prezentáló immunsejtekre (APC) jellemző." },
+            { cat: 5, q: "Milyen koreceptort hordoznak a T-helper sejtek?", opts: ["CD8", "CD4", "CD3", "BCR"], ans: 1, exp: "A T-helper sejtek CD4+ felszíni markerrel rendelkeznek." },
+            { cat: 5, q: "Milyen MHC molekulához kapcsolódnak a CD4+ T-helper sejtek?", opts: ["MHC-I", "MHC-II", "Mindkettőhöz", "Egyikhez sem"], ans: 1, exp: "A CD4+ T-sejtek az MHC-II komplexet ismerik fel." },
+            { cat: 5, q: "Milyen MHC molekulát ismer fel a CD8+ citotoxikus T-sejt?", opts: ["MHC-I", "MHC-II", "ABO antigén", "Rh D"], ans: 0, exp: "A CD8+ citotoxikus T-sejtek az MHC-I-hez kötődnek." },
+            { cat: 5, q: "Hogyan pusztítanak a CD8+ citotoxikus T-sejtek?", opts: ["Antitestel", "Perforin és granzim útján apoptózist indukálnak", "Kemotaxissal", "Phagocytosissal"], ans: 1, exp: "A CD8+ T-sejtek perforinnal és granzimokkal apoptózist váltanak ki." },
+            { cat: 5, q: "Mi az NK-sejtek (természetes ölősejtek) fő funkciója?", opts: ["Fibrin képzés", "Vírusos és tumorsejtek nem-specifikus elpusztítása", "B-sejt gátlás", "Vas szállítás"], ans: 1, exp: "Az NK-sejtek elpusztítják a daganatos és vírusos sejteket." },
+            { cat: 5, q: "Mi az opsonisatio?", opts: ["Lázkeltés", "Kórokozók bevonása ellenanyaggal a fagocitózis megkönnyítésére", "Eritropoetin gátlás", "Sejtszétesés"], ans: 1, exp: "Az opszoninok megkönnyítik a makrofágok számára a bekebelezést." },
+            { cat: 5, q: "Miből áll a komplementrendszer?", opts: ["Sejtmagokból", "A vérplazma enzimatikusan aktiválódó fehérjesorozatából (C1-C9)", "RNS szálakból", "Csontvelői őssejtekből"], ans: 1, exp: "A komplementrendszer plazmafehérjékből álló kaszkád." },
+            { cat: 5, q: "Mi a komplementrendszer végterméke, ami kilyukasztja a kórokozókat?", opts: ["Membrántámadó komplex (MAC)", "Fibrinháló", "Hisztamin", "Plazmin"], ans: 0, exp: "A MAC lyukat fúr a baktérium membránjába." },
+            { cat: 5, q: "Milyen vakcinációt nevezünk aktív immunizálásnak?", opts: ["Kész ellenanyag bevitele", "Elölt/gyengített kórokozó bevitele, ami saját immunválaszt vált ki", "Vérátömlesztés", "Sérum injekció"], ans: 1, exp: "Az aktív immunizálás saját immunválaszra és memóriára ösztönöz." },
+            { cat: 5, q: "Mi a passzív immunizálás?", opts: ["Oltás elölt vírussal", "Kész ellenanyagok bevitele azonnali védelemért", "Vitamin adagolás", "Antibiotikum szedése"], ans: 1, exp: "A passzív immunizáció kész antitesteket ad." },
+            { cat: 5, q: "Mi az autoimmunitás?", opts: ["Fertőzés hiánya", "Amikor az immunrendszer a saját szöveteket támadja meg", "Túl kevés fehérvérsejt", "Allergiás tüsszentés"], ans: 1, exp: "Autoimmunitáskor a saját-tolerancia megszűnik." },
+            { cat: 5, q: "Melyik sejteket fertőzi meg és pusztítja el célzottan a HIV vírus?", opts: ["B-sejtek", "CD4+ T-helper sejtek", "Vörösvértestek", "Neutrofilek"], ans: 1, exp: "A HIV a CD4+ T-helper sejteket pusztítja." },
+            { cat: 5, q: "Mi az anafilaxiás sokk?", opts: ["Súlyos, életveszélyes szisztémás allergiás reakció", "Lázas állapot", "Kalciumhiány", "Vércsoport eltérés"], ans: 0, exp: "Az anafilaxia masztocitákból kiáramló hisztamin miatti összeomlás." },
+
+            // 6. Vércsoportok (20)
+            { cat: 6, q: "Milyen kémiai szerkezetűek az ABO antigének?", opts: ["Fehérjék", "Sejtfelszíni glikolipidek szénhidrátláncai", "RNS", "Aminosavak"], ans: 1, exp: "Az ABO antigének sejtmembránban lévő glikolipidek szénhidrátláncai." },
+            { cat: 6, q: "Milyen öröklődésű az A és B antigén egymással szemben?", opts: ["Domináns-recesszív", "Kodomináns", "X-kötött", "Intermediér"], ans: 1, exp: "Az A és B allelek egymással szemben kodominánsak." },
+            { cat: 6, q: "Milyen antigén van a '0'-s vvt felszínén?", opts: ["A antigén", "B antigén", "A és B is", "Nincs A sem B antigén"], ans: 3, exp: "A '0'-s vvt-k felszínén nincs sem A, sem B antigén." },
+            { cat: 6, q: "Milyen ellenanyag van az 'A' vércsoportú ember plazmájában?", opts: ["Anti-A", "Anti-B", "Anti-A és Anti-B", "Nincs ellenanyag"], ans: 1, exp: "Az 'A' vércsoportú egyén plazmája anti-B ellenanyagot tartalmaz." },
+            { cat: 6, q: "Milyen ellenanyag van a 'B' vércsoportú ember plazmájában?", opts: ["Anti-A", "Anti-B", "Anti-A és Anti-B", "Nincs ellenanyag"], ans: 0, exp: "A 'B' vércsoportú plazmában anti-A ellenanyag található." },
+            { cat: 6, q: "Milyen ellenanyag van a '0'-s vércsoportú ember plazmájában?", opts: ["Anti-A", "Anti-B", "Anti-A és Anti-B is", "Nincs ellenanyag"], ans: 2, exp: "A '0'-s vércsoportú plazma anti-A és anti-B ellenanyagot is tartalmaz." },
+            { cat: 6, q: "Milyen ellenanyag van az 'AB' vércsoportú plazmában?", opts: ["Anti-A", "Anti-B", "Anti-A és Anti-B", "Semmilyen anti-A vagy anti-B nincs"], ans: 3, exp: "Az 'AB' vércsoportú plazmában nincs anti-A és anti-B ellenanyag sem." },
+            { cat: 6, q: "Milyen osztályba tartoznak a természetes ABO ellenanyagok?", opts: ["IgG", "IgM", "IgA", "IgE"], ans: 1, exp: "Az ABO ellenanyagok főleg IgM osztályúak." },
+            { cat: 6, q: "Mi a transzfúzió fő aranyszabálya?", opts: ["Donor plazma szabály", "Recipiens plazma ellenanyaga nem csaphatja ki a donor vvt-antigénjeit", "Mindenki adhat mindenkinek", "Csak plazma adható"], ans: 1, exp: "A recipiens ellenanyagai nem reagálhatnak a donor vvt-antigénjeivel." },
+            { cat: 6, q: "Ki az univerzális donor vörösvértest-koncentrátum esetén?", opts: ["AB, Rh+", "0, Rh-", "A, Rh-", "0, Rh+"], ans: 1, exp: "A 0, Rh- nem tartalmaz A, B és D antigént sem." },
+            { cat: 6, q: "Ki az univerzális recipiens (általános kapó)?", opts: ["0, Rh-", "AB, Rh+", "B, Rh-", "AB, Rh-"], ans: 1, exp: "Az AB, Rh+ plazmájában nincs anti-A, anti-B és anti-D sem." },
+            { cat: 6, q: "Milyen öröklődésű az Rh (D) vércsoport?", opts: ["Kodomináns", "Domináns-recesszív (D domináns)", "X-kötött", "Intermediér"], ans: 1, exp: "A D allel dominánsan öröklődik a d allel felett." },
+            { cat: 6, q: "Mikor jelenik meg az anti-D egy Rh-negatív emberben?", opts: ["Születéstől", "Soha", "Rh+ vérrel való immunizálódás után", "Spontán"], ans: 2, exp: "Az Rh- szervezetben csak Rh+ vérrel való találkozás után termelődik anti-D." },
+            { cat: 6, q: "Milyen immunglobulin osztályba tartozik az szerzett anti-D ellenanyag?", opts: ["IgM", "IgG", "IgA", "IgE"], ans: 1, exp: "Az anti-D IgG típusú, ezért átjut a placentán." },
+            { cat: 6, q: "Mikor veszélyes az Rh-összeférhetetlenség?", opts: ["Rh+ anya, Rh- magzat", "Rh- anya 1. terhessége", "Rh- anya 2. (vagy többedik) Rh+ magzata", "Rh+ szülők"], ans: 2, exp: "Ha az Rh- anya már immunizálódott, az anti-D átjut a 2. Rh+ magzatba." },
+            { cat: 6, q: "Hogyan előzhető meg az Rh-immunizáció az anyában szülés után?", opts: ["K-vitaminnal", "Anya passzív immunizálásával anti-D injekcióval 72 órán belül", "Műtéttel", "Ca2+-al"], ans: 1, exp: "A szülés után adott anti-D injekció elpusztítja a bejutott magzati vvt-ket." },
+            { cat: 6, q: "Mit jelent a hemagglutináció?", opts: ["Feloldódás", "Vvt-k kicsapódása ellenanyag hatására", "Vérlemezke dugó", "Hb lebomlás"], ans: 1, exp: "A vvt-k specifikus kicsapódása antitestek jelenlétében." },
+            { cat: 6, q: "Ha egy vérminta anti-A-val kicsapódik, de anti-B-vel NEM, mi a vércsoport?", opts: ["A vércsoport", "B vércsoport", "AB vércsoport", "0 vércsoport"], ans: 0, exp: "Csak A antigén van jelen, így a vércsoport: A." },
+            { cat: 6, q: "Ha egy vérminta sem anti-A-val, sem anti-B-vel NEM csapódik ki, mi a vércsoportja?", opts: ["A", "B", "AB", "0"], ans: 3, exp: "Antigén hiányában egyik sem csapja ki, így a vércsoport: 0." },
+            { cat: 6, q: "Mi a major keresztreakció próba lényege transzfúzió előtt?", opts: ["Donor savó + recipiens sejt", "Recipiens savó (plazma) + Donor vörösvértest összeöntése", "Vérnyomás mérés", "Hőmérséklet teszt"], ans: 1, exp: "A kapó plazmáját összekeverik az adó vvt-ivel." },
+
+            // 7. A szív anatómiája & Ingerületvezetés (30)
+            { cat: 7, q: "Hol helyezkedik el az emberi szív és mekkora a tömege?", opts: ["Hasi üregben, 500 g", "Mellüregben bal oldalon, 250-300 g (ököl nagyságú)", "Mellüregben jobb oldalon, 100 g", "Közvetlenül a máj alatt, 400 g"], ans: 1, exp: "A szív a mellüregben, a gátorban (mediastinum) helyezkedik el, tömege kb. 250-300 g." },
+            { cat: 7, q: "Milyen rétegekből áll a szívburok (pericardium)?", opts: ["Csak egyetlen izomrétegből", "Külső rostos és belső savós rétegből (fali és zsigeri lemez)", "Endothelium és epithelium", "Három csontos lemezből"], ans: 1, exp: "A szívburok külső rostos és belső savós lemezből áll; a savós fali és zsigeri (epicardium) rétege közt folyadék van." },
+            { cat: 7, q: "A szívfal tömegének kb. hány százalékát adja a szívizom (myocardium)?", opts: ["50%", "75%", "95%", "100%"], ans: 2, exp: "A szívfal vastagságának és tömegének kb. 95%-át a myocardium (szívizom) alkotja." },
+            { cat: 7, q: "Melyik szívkamra fala a legvastagabb és miért?", opts: ["Jobb pitvar, mert ide érkezik a vér", "Jobb kamra, mert a tüdőbe pumpál", "Bal kamra, mert a nagy vérkör magas nyomásával szemben pumpál", "Bal pitvar"], ans: 2, exp: "A bal kamra fala kb. 3-szor vastagabb a jobbnál, mert a nagy vérkör 120 Hgmm-es szisztólés nyomásával szemben dolgozik." },
+            { cat: 7, q: "Milyen billentyűk találhatók a pitvarok és a kamrák között (AV-billentyűk)?", opts: ["Zsebes (félhold alakú) billentyűk", "Vitorlás (cuspidalis) billentyűk", "Szelep alakú billentyűk", "Rostos gyűrűk"], ans: 1, exp: "A pitvarok és kamrák határán vitorlás (tricuspidalis és bicuspidalis/mitralis) billentyűk vannak." },
+            { cat: 7, q: "Hány vitorlából áll a jobb és a bal pitvar-kamrai billentyű?", opts: ["Jobb: 2, Bal: 3", "Jobb: 3 (tricuspidalis), Bal: 2 (bicuspidalis/mitralis)", "Mindkettő 3 vitorlás", "Mindkettő 2 vitorlás"], ans: 1, exp: "A jobb AV-billentyű 3 vitorlás (tricuspidalis), a bal 2 vitorlás (bicuspidalis/mitralis)." },
+            { cat: 7, q: "Mi akadályozza meg a vitorlás billentyűk visszacsapódását a pitvarokba a kamraszisztóle során?", opts: ["Zsebes tasakok", "Ínhúrok (chordae tendineae) és szemölcsizmok (papilláris izmok)", "Szívburok folyadéka", "Aorta nyomása"], ans: 1, exp: "A szemölcsizmok összehúzódása és a megfeszülő ínhúrok tartják zárva a vitorlákat." },
+            { cat: 7, q: "Hol találhatók félhold alakú (zsebes / semilunaris) billentyűk?", opts: ["Pitvarok és vénák között", "Jobb kamra-tüdőartéria és Bal kamra-aorta eredésénél", "Csak a szívcsúcsnál", "Nyirokerekben"], ans: 1, exp: "A zsebes billentyűk a kamrákból kilépő nagyartériák (aorta, a. pulmonalis) szájadékánál vannak." },
+            { cat: 7, q: "Mi az 'annulus fibrosus' élettani szerepe a szívben?", opts: ["Vérellátást biztosít", "Rostos kötőszövetes gyűrű, ami elektromosan szigeteli a pitvarokat a kamráktól", "Ingerületet képez", "Vért raktároz"], ans: 1, exp: "Az annulus fibrosus elektromos szigetelőként megakadályozza az ingerület közvetlen átterjedését a pitvarról a kamrára." },
+            { cat: 7, q: "Mi a szív normális, elsődleges ingerképző központja (pacemaker)?", opts: ["Pitvar-kamrai (AV) csomó", "Szinuszcsomó (SA-csomó)", "His-köteg", "Purkinje-rostok"], ans: 1, exp: "A jobb pitvar falában lévő szinuszcsomó (SA-csomó) a szív elődleges ritmusgenerálója (~70-80/perc)." },
+            { cat: 7, q: "Hol helyezkedik el a szinuszcsomó?", opts: ["A bal kamra csúcsánál", "A jobb pitvar falában, a vena cava superior beszájadzásánál", "A kamrai sövényben", "Az aortában"], ans: 1, exp: "A szinuszcsomó a jobb pitvar hátsó falában, a felső üreges véna beömlésénél található." },
+            { cat: 7, q: "Milyen sajátossága van a pacemaker sejtek membránpotenciáljának?", opts: ["Stabil nyugalmi potenciáljuk van (-90 mV)", "Nincs stabil nyugalmi potenciáljuk, spontán lassan depolarizálódnak (pacemaker potenciál)", "Csak külső idegi ingerre aktiválódnak", "Nem képesek akciós potenciálra"], ans: 1, exp: "A pacemaker sejtekben lassan kationok áramlanak be, létrehozva a spontán diassztólés depolarizációt." },
+            { cat: 7, q: "Melyik ion beáramlása hozza létre a pacemaker sejtek akciós potenciáljának felszálló ágát?", opts: ["Na+", "Ca2+ (feszültségfüggő Ca2+-csatornákon át)", "K+", "Cl-"], ans: 1, exp: "A pacemaker sejtekben a gyors depolarizációt a Ca2+ beáramlás váltja ki." },
+            { cat: 7, q: "Mi a másodlagos ingerképző központ, ha a szinuszcsomó kiesik?", opts: ["His-köteg", "Pitvar-kamrai (AV) csomó (~40-60/perc)", "Purkinje-rostok", "Szemölcsizom"], ans: 1, exp: "Az AV-csomó másodlagos pacemakerként 40-60/perc saját frekvenciával tud működni." },
+            { cat: 7, q: "Mi az egyetlen normális elektromos összeköttetés a pitvarok és a kamrák között?", opts: ["Tawara-szálak", "His-köteg (ami átfúrja az annulus fibrosust)", "Szinuszcsomó", "Mydocardium hidak"], ans: 1, exp: "A His-köteg halad át a szigetelő annulus fibrosuson a kamrák felé." },
+            { cat: 7, q: "Milyen sorrendben halad az ingerület a szív ingerületvezető rendszerében?", opts: ["AV-csomó -> SA-csomó -> Purkinje -> His", "SA-csomó -> Pitvari izomzat -> AV-csomó -> His-köteg -> Tawara-szálak -> Purkinje-rostok", "Purkinje -> Tawara -> His -> AV", "SA -> Tawara -> AV -> His"], ans: 1, exp: "Pontos út: SA-csomó -> pitvarok -> AV-csomó -> His-köteg -> Tawara-szárak -> Purkinje-rostok -> kamraizom." },
+            { cat: 7, q: "Mi a késleltetés élettani jelentősége az AV-csomóban (kb. 0,1 sec)?", opts: ["Hogy a kamrák hamarabb húzódjanak össze", "Hogy a pitvarok kontrakciója befejeződjön és a kamrák megteljenek, mielőtt a kamrák összehúzódnak", "Gátolja a véráramlást", "Vérnyomást csökkent"], ans: 1, exp: "Az AV-csomói lassú vezetés biztosítja, hogy a pitvarok kiürüljenek a kamrai szisztóle előtt." },
+            { cat: 7, q: "Melyik szakaszon a leggyorsabb az ingerületvezetés a szívben (~4 m/s)?", opts: ["Szinuszcsomóban", "AV-csomóban", "Purkinje-rostokban", "Pitvarizomban"], ans: 2, exp: "A Purkinje-rostokban rendkívül gyors a vezetés (2-4 m/s), hogy a kamrák szinkronban húzódjanak össze." },
+            { cat: 7, q: "Milyen hatást fejt ki a paraszimpatikus idegrendszer (n. vagus) a szívfrekvenciára?", opts: ["Gyorsítja (pozitív kronotrop)", "Lassítja (negatív kronotrop hatás)", "Nincs hatása", "Leállítja a vérképzést"], ans: 1, exp: "A vagus-ingerlés lassítja a szinuszcsomó spontán kisüléseit (negatív kronotrop)." },
+            { cat: 7, q: "Milyen hatással van a szimpatikus idegrendszer a szívre?", opts: ["Pozitív kronotrop, inotrop, dromotrop és batmotrop hatású (fokoz mindent)", "Csak lassítja a szívverést", "Csak az ereket tágítja", "Gátolja a Ca2+ beáramlást"], ans: 0, exp: "A szimpatikus hatás (noradrenalin/adrenalin Beta-1 receptoron) fokozza a frekvenciát, összehúzódási erőt és ingervezetést." },
+            { cat: 7, q: "Mi a 'bradikardia' élettani fogalma?", opts: ["Szaporakverés (>100/perc)", "Lassú szívverés (nyugalmi szívfrekvencia <60/perc)", "Rendszertelen szívverés", "Szívleállás"], ans: 1, exp: "Bradikardiáról 60/perc alatti nyugalmi szívfrekvencia esetén beszélünk." },
+            { cat: 7, q: "Mi a 'tachikardia' élettani fogalma?", opts: ["Gyors szívverés (nyugalmi szívfrekvencia >100/perc)", "Lassú szívverés", "Légzési kimaradás", "Pitvari blokk"], ans: 0, exp: "Tachikardiáról 100/perc feletti nyugalmi szívfrekvencia esetén beszélünk." },
+            { cat: 7, q: "Milyen neurotranszmittert szabadítanak fel a paraszimpatikus vagusrostok a szívben?", opts: ["Noradrenalin", "Acetilkolin (ACh)", "Dopamin", "Szerotonin"], ans: 1, exp: "A n. vagus a muszkarinerg receptorokhoz kötődő acetilkolint (ACh) szabadít fel." },
+            { cat: 7, q: "Milyen receptorokon hat a noradrenalin és az adrenalin a szívizomsejtekben?", opts: ["Alfa-1 adrenerg receptor", "Beta-1 adrenerg receptor", "Muszkarin M2 receptor", "Nicotinic receptor"], ans: 1, exp: "A szívben a Beta-1 adrenerg receptorok közvetítik a szimpatikus serkentést." },
+            { cat: 7, q: "Hogyan változik a szívfrekvencia, ha mindkét nervus vagust átvágják?", opts: ["Leáll a szív", "Lassul 30/percre", "Jelentősen megnő (kb. 150-180/percre)", "Változatlan marad"], ans: 2, exp: "Mivel nyugalomban a vagus gátlás alatt tartja a szívet, átvágásakor a szívfrekvencia megugrik." },
+            { cat: 7, q: "Mi a dromotrop hatás jelentése?", opts: ["Frekvencia változása", "Ingerületvezetési sebesség változása", "Kontrakciós erő változása", "Ingerelhetőség változása"], ans: 1, exp: "Dromotrop hatás = az ingerületvezetési sebesség befolyásolása." },
+            { cat: 7, q: "Mi az inotrop hatás jelentése?", opts: ["A szívizom összehúzódási erejének (kontraktilitásának) változása", "Frekvencia változása", "Ingerületvezetés lassulása", "Kamrai tágulékonyság"], ans: 0, exp: "Inotrop hatás = a szívizom összehúzódási erejének módosulása." },
+            { cat: 7, q: "Milyen ion elengedhetetlen a szívizomsejtek kontraktilitásához (szisztóléjához)?", opts: ["Na+", "Ca2+", "K+", "Cl-"], ans: 1, exp: "Az intracelluláris Ca2+-szint emelkedése váltja ki a szarkomerek összehúzódását." },
+            { cat: 7, q: "Mi az a 'vagus-tónus'?", opts: ["A szimpatikus dúcok izgalma", "A bolygóideg állandó, nyugalmi gátló hatása a szinuszcsomóra", "A szívizom tónusa", "Aorta nyomása"], ans: 1, exp: "Nyugalomban a vagus állandó gátló tónust fejt ki, kb. 70/perc értéken tartva a szívverést." },
+            { cat: 7, q: "Van-e érdemi paraszimpatikus (vagus) beidegzése a kamrák izomzatának?", opts: ["Igen, nagyon sűrű", "Nincs, a vagus főleg a pitvarokat és ingerképző csomókat idegzi be", "Csak a bal kamra csúcsán", "Csak a szemölcsizmoknak"], ans: 1, exp: "A kamrák munkaszövetének gyakorlatilag nincs paraszimpatikus beidegzése." },
+
+            // 8. Szívciklus, EKG & Hemodinamika (30)
+            { cat: 8, q: "Milyen fő szakaszokból áll a szívciklus?", opts: ["Csak szisztóléból", "Szisztóle (összehúzódás/ürülés) és Diasztóle (elernyedés/telődés)", "Inspiráció és expiráció", "Filtráció és reabszorpció"], ans: 1, exp: "A szívciklus szisztólés (kamrai összehúzódás/ürülés) és diasztólés (kamrai elernyedés/telődés) szakaszokból áll." },
+            { cat: 8, q: "Mi történik a 'kettős diasztóle' (közös elernyedés) szakaszában?", opts: ["A pitvarok és kamrák is diasztoléban vannak, a vér passzívan áramlik a kamrákba", "A kamrák maximálisan összehúzódnak", "A zsebes billentyűk nyitva vannak", "A vér az aortából a szívbe folyik"], ans: 0, exp: "Kettős diasztoléban a pitvarok és kamrák is lazák, az AV-billentyűk nyitva vannak, folyik a passzív telődés." },
+            { cat: 8, q: "A kamrai telődés hány százaléka zajlik le passzívan a pitvari szisztóle előtt fiatalokban?", opts: ["10%", "50%", "kb. 80%", "100%"], ans: 2, exp: "A kamratelődés kb. 80%-a passzív; a pitvari szisztóle fiatalon csak kb. 20%-ot tesz hozzá." },
+            { cat: 8, q: "Mi váltja ki az I. szívhangot (szisztólés szívhang)?", opts: ["A zsebes billentyűk záródása", "A pitvar-kamrai (vitorlás) billentyűk záródása a kamraszisztóle kezdetén", "A vér áramlása a vénákban", "A pitvarok összehúzódása"], ans: 1, exp: "Az I. szívhangot a vitorlás billentyűk csapódása és a vérrezgés hozza létre a kamraszisztóle elején." },
+            { cat: 8, q: "Mi váltja ki a II. szívhangot (diasztólés szívhang)?", opts: ["A vitorlás billentyűk nyitása", "A zsebes (félhold alakú) billentyűk záródása a kamradiasztóle kezdetén", "Pitvari szisztóle", "Szemölcsizmok elernyedése"], ans: 1, exp: "A II. szívhang az aorta és a tüdőartéria zsebes billentyűinek záródásakor keletkezik." },
+            { cat: 8, q: "Melyik EKG hullám jelzi a pitvarok depolarizációját?", opts: ["P-hullám", "QRS-komplexum", "T-hullám", "U-hullám"], ans: 0, exp: "A P-hullám felel meg a pitvari depolarizációnak." },
+            { cat: 8, q: "Melyik EKG szakasz jelzi a kamrák depolarizációját?", opts: ["P-hullám", "QRS-komplexum", "T-hullám", "ST-szakasz"], ans: 1, exp: "A QRS-komplexum képviseli a kamrák gyors depolarizációját." },
+            { cat: 8, q: "Melyik EKG hullám felel meg a kamrák repolarizációjának?", opts: ["P-hullám", "QRS-komplexum", "T-hullám", "P-Q szakasz"], ans: 2, exp: "A T-hullám a kamrai repolarizációt (újratermelődést) jelöli." },
+            { cat: 8, q: "Hol rejlik el a pitvari repolarizáció jele az EKG-n?", opts: ["P-hullám előtt", "Beleolvad a jóval nagyobb QRS-komplexumba", "T-hullám után", "Nincs pitvari repolarizáció"], ans: 1, exp: "A pitvari repolarizáció elektromos jele elfedődik a kamrai QRS-komplexum alatt." },
+            { cat: 8, q: "Mit mutat a P-Q (vagy P-R) intervallum az EKG-n?", opts: ["A kamraszisztóle teljes idejét", "A pitvar-kamrai átvezetési időt (ingerület SA-ból kamrákig érését)", "A szívfrekvenciát", "A szemölcsizmok repolarizációját"], ans: 1, exp: "A P-Q intervallum (normálisan 0,12-0,20 s) az atrioventrikuláris átvezetési idő." },
+            { cat: 8, q: "Mi a pulzustérfogat (löktérfogat / stroke volume) átlagos nyugalmi értéke?", opts: ["20 ml", "70 - 75 ml", "150 ml", "5 liter"], ans: 1, exp: "Egy kamraszisztóle során meglökött vérmennyiség nyugalomban kb. 70-75 ml." },
+            { cat: 8, q: "Mi a perctérfogat (cardiac output) képlete és nyugalmi értéke?", opts: ["Pulzustérfogat / Szívfrekvencia; 1 L/perc", "Szívfrekvencia x Pulzustérfogat; kb. 5,0 - 5,5 liter/perc", "Hematokrit x Vérnyomás; 10 L/perc", "Aorta átmérő x vérsebesség; 2 L/perc"], ans: 1, exp: "Perctérfogat = Szívfrekvencia (70/perc) x Pulzustérfogat (75 ml) = kb. 5 - 5,2 L/perc." },
+            { cat: 8, q: "Mi a 'Frank-Starling féle szívtörvény' lényege?", opts: ["A szívfrekvencia mindig állandó", "A végdiasztólés telődés (előterhelés/rosthossz) növekedése erőteljesebb kontrakciót eredményez", "A vérnyomás emelkedése lassítja a szívet", "A bal kamra kevesebb vért pumpál, mint a jobb"], ans: 1, exp: "A Frank-Starling törvény szerint a szív a kezdeti rosthossz (telődés) növelésével fokozza a összehúzódás erejét." },
+            { cat: 8, q: "Mi az 'előterhelés' (preload) a szívben?", opts: ["Az aorta vérnyomása", "A kamrafal feszülése a diasztóle végén (a végdiasztólés térfogat/telődés)", "A perifériás ellenállás", "A vitorlás billentyű szorítása"], ans: 1, exp: "Az előterhelést a diasztóle végi kamratelődés és a fal feszülése adja." },
+            { cat: 8, q: "Mi az 'utóterhelés' (afterload) a szív szempontjából?", opts: ["A pitvari telődés", "Az a nyomás/ellenállás (aortában/tüdőartériában), amivel szemben a kamrának vért kell pumpálnia", "A szívfrekvencia", "A vena cava nyomása"], ans: 1, exp: "Az utóterhelés az a nyomás, amit a kamrának le kell győznie a zsebes billentyűk kinyitásához." },
+            { cat: 8, q: "Mekkora a szisztólés és diasztólés vérnyomás átlagos normálértéke a nagy vérkörben?", opts: ["80/40 Hgmm", "120/80 Hgmm", "150/100 Hgmm", "200/120 Hgmm"], ans: 1, exp: "A nagyvérköri normál szisztólés nyomás 120 Hgmm, a diasztólés 80 Hgmm." },
+            { cat: 8, q: "Mekkora a szisztólés és diasztólés vérnyomás a kis vérkörben (tüdőartéria)?", opts: ["120/80 Hgmm", "24/9 Hgmm (lényegesen alacsonyabb!)", "50/30 Hgmm", "200/50 Hgmm"], ans: 1, exp: "A kis vérkör alacsony nyomású rendszer: szisztólés kb. 24 Hgmm, diasztólés kb. 9 Hgmm." },
+            { cat: 8, q: "Mi a 'pulzusnyomás' definíciója és átlagos értéke a nagy vérkörben?", opts: ["Szisztólés és diasztólés nyomás összege", "Szisztólés és diasztólés nyomás különbsége (120 - 80 = 40 Hgmm)", "Középnyomás fele", "Perctérfogat / 100"], ans: 1, exp: "Pulzusnyomás = Pszisztólés - Pdiasztólés = 120 - 80 = 40 Hgmm." },
+            { cat: 8, q: "Hogyan számítható ki az artériás középnyomás (Pközép)?", opts: ["(Psziszt + Pdiaszt) / 2", "Pdiaszt + (Ppulzus / 3) [vagy (2xPdiaszt + Psziszt) / 3]", "Psziszt - Pdiaszt", "Perctérfogat x 80"], ans: 1, exp: "Artériás középnyomás = Pdiasztólés + (Pulzusnyomás / 3) = 80 + 13,3 = kb. 93 Hgmm." },
+            { cat: 8, q: "Hol a leglassabb a vér áramlási sebessége az érrendszerben?", opts: ["Aortában", "Nagy vénákban", "Kapillárisokban (az óriási össz-keresztmetszet miatt)", "Arteriolákban"], ans: 2, exp: "A kapillárisok össz-keresztmetszete a legnagyobb, ezért itt a leglassabb az áramlás (~0,5-1 mm/s)." },
+            { cat: 8, q: "Milyen fizikai összefüggést ír le a Hagen-Poiseuille törvény?", opts: ["A szívfrekvencia változását", "A csőben/érben folyó lamináris áramlást és ellenállást (az ellenállás a sugár 4. hatványával fordítottan arányos)", "Az EKG hullámokat", "A vérplazma pH-ját"], ans: 1, exp: "Hagen-Poiseuille: az érellenállás fordítottan arányos az ér sugarának 4. hatványával (R ~ 1/r^4)." },
+            { cat: 8, q: "Mi a 'szélkazán' (légüst) funkció lényege az aortában?", opts: ["A vér oxigénezése", "Az rugalmas érfal tágulása szisztoléban elnyeli a nyomáshullámot, majd diasztoléban visszahúzódva folyamatos áramlást biztosít", "Gátolja a vérvisszaáramlást", "Hőt termel"], ans: 1, exp: "A nagy rugalmas artériák szélkazán-funkciója alakítja át a szakaszos kamrai kilökérést folyamatos éráramlássá." },
+            { cat: 8, q: "Mi történik az érfalak rugalmasságának csökkenésekor (pl. idős korban)?", opts: ["A szisztólés vérnyomás megemelkedik", "A diasztólés nyomás nullára esik", "A véráramlás leáll", "A szívfrekvencia lelassul"], ans: 0, exp: "Rugalmatlan érfal esetén a szélkazán-hatás gyengül, ami magas szisztólés vérnyomáshoz vezet." },
+            { cat: 8, q: "Melyik érszakasz felelős a perifériás ellenállás (TPR) legnagyobb részéért?", opts: ["Aorta", "Arteriolák (prekapilláris rezisztenciaerek)", "Kapillárisok", "Nagy vénák"], ans: 1, exp: "Az arteriolák simaizomzata szabályozza az átmérőt, megadva a perifériás ellenállás zömét." },
+            { cat: 8, q: "Milyen hangot hallunk a vérnyomásméréskor a mandzsetta leeresztése közben (Korotkov-hangok)?", opts: ["Lamináris csendes áramlás hangját", "A részben összenyomott artériában kialakuló turbulens áramlás súrlódó hangját", "A szív billentyűinek csapódását", "A vénák lüktetését"], ans: 1, exp: "A Korotkov-hangokat az érszűkületen átspriccelő vér turbulenciája hozza létre." },
+            { cat: 8, q: "Melyik Korotkov-hang jelzi a szisztólés és a diasztólés vérnyomást?", opts: ["Megjelenése: Szisztólés nyomás; Eltűnése: Diasztólés nyomás", "Megjelenése: Diasztólés; Eltűnése: Szisztólés", "Csak a leghangosabb számít", "Nincs köze hozzá"], ans: 0, exp: "Az első koppanó hang megjelenése a szisztólés, a hangok teljes eltűnése a diasztólés érték." },
+            { cat: 8, q: "Hol oszlik meg a szervezetben lévő vér döntő többsége (~64%-a) nyugalomban?", opts: ["Szívben", "Artériákban", "Vénás rendszerben (kapacitáserek / térfogati rezervoár)", "Kapillárisokban"], ans: 2, exp: "A tágulékony vénák és venulák tartalmazzák a vértérfogat kb. 64%-át." },
+            { cat: 8, q: "Milyen két fázisra bontható a kamraszisztóle?", opts: ["Izovolumetriás (izometriás) kontrakció és Ejekció (ürülési szakasz)", "Passzív telődés és aktív telődés", "P-hullám és T-hullám", "Pitvari szisztóle és diasztóle"], ans: 0, exp: "A kamraszisztóle zárt billentyűk melletti nyomásnövekedéssel (izovolumetriás) indul, majd a zsebes billentyűk nyitásával ürül (ejekció)." },
+            { cat: 8, q: "Mi történik az izovolumetriás relaxáció során?", opts: ["A kamrák ürülnek", "Minden billentyű zárt, a kamraizomzat elernyed, a kamrai nyomás meredeken esik, a térfogat változatlan", "A pitvarok összehúzódnak", "A vér az aortába áramlik"], ans: 1, exp: "Izovolumetriás relaxációban a zsebes billentyűk már zártak, az AV-k még zártak, a térfogat nem változik." },
+            { cat: 8, q: "Mekkora a bal kamrában a nyomás a szisztóle csúcsán?", opts: ["24 Hgmm", "80 Hgmm", "120 Hgmm", "200 Hgmm"], ans: 2, exp: "A bal kamrai szisztólés csúcsnyomás normálisan kb. 120 Hgmm." },
+
+            // 9. Érrendszer, Kapilláris-filtráció & Nyirok (30)
+            { cat: 9, q: "Milyen 3 fő rétegből áll az erek fala (kivéve a kapillárisokat)?", opts: ["Tunica interna (intima), Tunica media, Tunica externa (adventitia)", "Endocardium, Myocardium, Epicardium", "Epidermis, Dermis, Subcutis", "Pia, Arachnoidea, Dura"], ans: 0, exp: "Az érfal szerkezete: Tunica intima (endotél), Tunica media (simaizom) és Tunica adventitia (kötőszövet)." },
+            { cat: 9, q: "Miből áll a kapillárisok (hajszálerek) fala?", opts: ["Vastag simaizomból", "Kizárólag egyetlen réteg endotélsejtből és az azt övező alaphártyából", "Rostos szívburokból", "Kollagén hüvelyből"], ans: 1, exp: "A kapillárisok fala mindössze egyetlen rétegű endothelium és alaphártya, ami optimális az anyagcseréhez." },
+            { cat: 9, q: "Melyik kapilláris típusra jellemző a szorosan zárt endotél és a folyamatos alaphártya (pl. izomban, agyban)?", opts: ["Folyamatos (folytonos) kapilláris", "Fenesztrált (ablakos) kapilláris", "Szinuszoid kapilláris", "Anasztomózis"], ans: 0, exp: "A folyamatos kapillárisok a leggyakoribbak (izom, idegrendszer, tüdő), szoros kapcsolatokkal." },
+            { cat: 9, q: "Hol találhatók fenesztrált (ablakos) kapillárisok a szervezetben?", opts: ["Agykéregben", "Veségombócokban (glomerulus), bélbolyhokban és belső elválasztású mirigyekben", "Vázizomban", "Aortában"], ans: 1, exp: "A fenesztrált kapillárisok 50-60 nm-es ablakai nagy molekuláris átbocsátást tesznek lehetővé (vese, bél, mirigyek)." },
+            { cat: 9, q: "Mely szervekben találhatók hiányos alaphártyájú, nagy tág nyílású szinuszoid kapillárisok?", opts: ["Máj, lép és vörös csontvelő", "Tüdő és szív", "Vesék és agy", "Bőr"], ans: 0, exp: "A szinuszoidok szabad sejtes és fehérje átjutást engednek a májban, lépben és csontvelőben." },
+            { cat: 9, q: "Mi a prekapilláris szfinkterek feladata?", opts: ["A vérnyomás mérése", "Simaizom gyűrűk a kapillárisok eredésénél, amik szabályozzák a kapilláriságy átáramlását", "Billentyűként működnek a vénákban", "A nyirok elszállítása"], ans: 1, exp: "A prekapilláris szfinkterek nyitása/zárása helyi anyagcsereigény szerint szabályozza a kapillárisok keringését." },
+            { cat: 9, q: "Mi a Starling-féle kapilláris-filtrációs elmélet lényege?", opts: ["A kapillárisban csak diffúzió van", "A folyadék mozgását a hidrosztatikai (vérnyomás) és a kolloidoszmotikus (plazmafehérje) nyomások különbsége szabja meg", "A nyiroksejtek termelik a plazmát", "A szív szívóhatása mozgatja a szövete közti vizet"], ans: 1, exp: "A hidrosztatikai nyomás kinyomja, a kolloidoszmotikus nyomás visszaszívja a folyadékot a kapillárisban." },
+            { cat: 9, q: "Mekkora a vér hidrosztatikai nyomása (BHP) a kapillárisok artériás és vénás végén?", opts: ["Artériás: 120 Hgmm, Vénás: 80 Hgmm", "Artériás: kb. 35 Hgmm, Vénás: kb. 16 Hgmm", "Mindkét végén 0 Hgmm", "Artériás: 10 Hgmm, Vénás: 25 Hgmm"], ans: 1, exp: "A vérnyomás esik a kapilláris mentén: az artériás végén ~35 Hgmm, a vénás végén ~16 Hgmm." },
+            { cat: 9, q: "Mekkora a vér kolloid ozmotikus (onkotikus) nyomása (BCOP) a kapillárisban?", opts: ["0 Hgmm", "kb. 26 Hgmm (és a kapilláris mentén végig állandó)", "100 Hgmm", "10 Hgmm"], ans: 1, exp: "A plazmafehérjék (főleg albumin) által kifejtett ozmotikus szívóerő kb. 26 Hgmm." },
+            { cat: 9, q: "Mi történik a kapilláris artériás végén az nettó filtrációs nyomás (NFP = +10 Hgmm) hatására?", opts: ["Folyadék szívódik fel a vérbe", "Folyadék átszűrődik (filtráció) a kapillárisból az intersticiális térbe", "A vér megalvad", "Nincs folyadékmozgás"], ans: 1, exp: "Az artériás végén a kinyomó hidrosztatikai nyomás nagyobb, mint az onkotikus szívóerő -> Fibráció (átszűrődés)." },
+            { cat: 9, q: "Mi történik a kapilláris vénás végén a nettó filtrációs nyomás (NFP = -9 Hgmm) hatására?", opts: ["Nettó reabszorpció (folyadék visszaszívódás a szövetközi térből a vérpályába)", "Még erősebb átszűrődés", "A fehérjék kilépnek", "Nyirokképződés leáll"], ans: 0, exp: "A vénás végén a vérnyomás (16) kisebb, mint az onkotikus nyomás (26) -> Reabszorpció (visszaszívás)." },
+            { cat: 9, q: "Mennyi folyadék szűrődik ki a kapillárisokból a szövetek közé naponta, és mennyi szívódik vissza?", opts: ["Szűrt: 100 L, Visszaszívott: 100 L", "Szűrt: kb. 20 liter/nap, Visszaszívott: kb. 17 liter/nap", "Szűrt: 2 L, Visszaszívott: 5 L", "Szűrt: 0,5 L, Visszaszívott: 0 L"], ans: 1, exp: "Napi 20 L szűrődik ki és 17 L szívódik vissza; a fennmaradó kb. 3 litert a nyirokrendszer viszi el." },
+            { cat: 9, q: "Mi a nyirokrendszer feladata a fennmaradó kb. 3 liter/nap szövetközti folyadékkal?", opts: ["A vizelettel kiüríti", "Visszajuttatja a vénás vérkeringésbe (a nyirokereken át)", "Elpárologtatja", "A székletbe üríti"], ans: 1, exp: "A nyirokerek összegyűjtik a felesleges szöveti folyadékot és a vénás rendszerbe vezetik." },
+            { cat: 9, q: "Milyen fő mechanizmusok segítik a vénás vér és a nyirok áramlását a szív felé?", opts: ["Csak a szív pumpálása", "Vénabillentyűk, Vázizompumpa és Légzési pumpa (mellkasi szívóhatás)", "Magas artériás nyomás", "Gravitáció kizárólag"], ans: 1, exp: "A vénás visszaáramlást a billentyűk egyirányúsítása, a vázizmok összehúzódása és a légzési nyomásváltozások hajtják." },
+            { cat: 9, q: "Mi az 'ödéma' (vízkór) élettani oka?", opts: ["A kapilláris filtráció, reabszorpció és nyirokelszállítás egyensúlyának felborulása (felszaporodik a szövetközi folyadék)", "Túl kevés vízivás", "Magas vörösvértestszám", "K-vitamin hiány"], ans: 0, exp: "Ödéma akkor keletkezik, ha a kiszűrődés meghaladja a visszaszívás és nyirokelvezetés kapacitását." },
+            { cat: 9, q: "Milyen ok vezethet ödéma kialakulásához éhezésben vagy májbetegségben?", opts: ["A vérnyomás megugrása", "A plazmafehérjék (albumin) csökkenése miatti alacsony kolloid ozmotikus nyomás (BCOP csökken)", "A nyirokerek túlműködése", "Magas szervetlen só szint"], ans: 1, exp: "Fehérjehiányban lecsökken a BCOP szívóereje, így a víz a szövetekben marad (ödéma)." },
+            { cat: 9, q: "Hova ömlik a szervezet bal oldalának és alsó felének nyirokanyagát gyűjtő fő nyirokvezeték (ductus thoracicus)?", opts: ["A jobb pitvarba közvetlenül", "A bal vénás szögletbe (v. jugularis interna és v. subclavia találkozása)", "A májba", "A hasüregbe"], ans: 1, exp: "A ductus thoracicus a bal vénás szögletben (angulus venosus) csatlakozik a vénás rendszerhez." },
+            { cat: 9, q: "Hova ömlik a jobb felső testfél nyirokkeringését gyűjtő 'ductus lymphaticus dexter'?", opts: ["A jobb vénás szögletbe", "A bal pitvarba", "A vesébe", "A gyomorba"], ans: 0, exp: "A jobb oldali nyiroktörzs a jobb vénás szögletben lép be a vénás keringésbe." },
+            { cat: 9, q: "Milyen sajátos struktúrák szűrik a nyirokfolyadékot és tartalmaznak rengeteg immunsejtet?", opts: ["Nyirokcsomók (nodi lymphatici)", "Lép szinuszok", "Peyer-plakkok", "Mandulák"], ans: 0, exp: "A nyirokcsomók a nyirokutak mentén lévő szűrők, ahol az immunválaszok beindulnak." },
+            { cat: 9, q: "Mi az 'arteriovenózus anasztomózis' szerepe a bőrben?", opts: ["Bélnyálkahártya táplálása", "Közvetlen átkötés az arteriola és venula között a kapillárisok megkerülésével (hőszabályozás!)", "Gázcsere fokozása", "Nyirokképzés"], ans: 1, exp: "A bőr alatti arteriovenózus anasztomózisok nyitása/zárása a hőt leadást vagy megőrzést szabályozza." },
+            { cat: 9, q: "Milyen értípust nevezünk 'kapacitásereknek'?", opts: ["Aortát", "Arteriolákat", "Vénákat és venulákat", "Kapillárisokat"], ans: 2, exp: "A tágulékony vénák a kapacitáserek, mert tágulásukkal nagy vértérfogatot képesek befogadni." },
+            { cat: 9, q: "Milyen értípust nevezünk 'rezisztenciaereknek'?", opts: ["Arteriolákat és prekapilláris szfinktereket", "Nagy vénákat", "Kapillárisokat", "Aortaívet"], ans: 0, exp: "Az arteriolák a rezisztenciaerek, mert szűkületük/tágulatuk szabja meg a perifériás ellenállást." },
+            { cat: 9, q: "Milyen hatással van a vázizmok tartós összenyomódása vagy mozdulatlansága a nyirokkeringésre?", opts: ["Gyorsítja", "Lassítja vagy leállítja, ami nyiroködémához (lymphoedema) vezethet", "Nincs hatása", "Csökkenti a vérnyomást"], ans: 1, exp: "A nyirokkeringés fenntartásához elengedhetetlen az izompumpa mozgása." },
+            { cat: 9, q: "Milyen nyomás uralkodik a jobb pitvarban nyugalomban (centrális vénás nyomás - CVP)?", opts: ["120 Hgmm", "80 Hgmm", "kb. 0-4 Hgmm", "25 Hgmm"], ans: 2, exp: "A centrális vénás nyomás (CVP) a jobb pitvarnál szinte 0 Hgmm szívó/beáramlási pont." },
+            { cat: 9, q: "Mi történik a vénák simaizomzatával szimpatikus izgalom hatására?", opts: ["Elernyednek", "Összehúzódnak (venoconstrictio), visszaszorítva a tárolt vért a szív felé", "Elhalnak", "Fibrint termelnek"], ans: 1, exp: "A venoconstrictio csökkenti a vénás kapacitást, növelve a vénás visszatérést és perctérfogatot." },
+            { cat: 9, q: "Milyen hatással van a mély belégzés a vénás visszaáramlásra?", opts: ["Gátolja", "Fokozza (a negatív mellkasi nyomás szívja a vért, a hasi nyomás meg nyomja)", "Nincs hatása", "Megállítja"], ans: 1, exp: "Belégzéskor a mellkasi szívóhatás és a hasi nyomásemelkedés segíti a vénás vér szívbe jutását." },
+            { cat: 9, q: "Milyen tápanyagok szívódnak fel a bélből kizárólag a nyirokereken (chylo-vessel) keresztül?", opts: ["Cukrok", "Aminosavak", "Törpésített zsírok és zsíroldékony vitaminok (chylomicron formában)", "Víz és Na+"], ans: 2, exp: "A bélbolyhok nyirokkapillárisai szállítják el a felszívódott zsírokat (tejszerű chylus)." },
+            { cat: 9, q: "Mi történik az arteriolák tágulásakor (vazodilatáció) a kapilláris nyomással?", opts: ["A kapilláris nyomás emelkedik, fokozva a filtrációt", "A kapilláris nyomás leesik", "A kapillárisok elzáródnak", "Nincs változás"], ans: 0, exp: "Arteriola tágulatkor több vér zúdul a kapillárisokba, emelve az ottani hidrosztatikai nyomást." },
+            { cat: 9, q: "Mi történik az arteriolák szűkületekor (vazokonstrikció) az artériás vérnyomással?", opts: ["Az artériás vérnyomás emelkedik (nő a perifériás ellenállás)", "Az artériás vérnyomás leesik", "Vénás vérnyomás nő", "A szívverés leáll"], ans: 0, exp: "Arteriola szűkület emeli a perifériás ellenállást, ami növeli a szisztémás artériás vérnyomást." },
+            { cat: 9, q: "Hol zajlik a gázok (O2, CO2) és tápanyagok tényleges kicserélődése a vér és a szövetek között?", opts: ["Aortában", "Arteriolákban", "Kizárólag a kapillárisokban és posztkapilláris venulákban", "Nagy vénákban"], ans: 2, exp: "Csak a vékony falú kapillárisok és posztkapilláris venulák alkalmasak anyagkicserélődésre." },
+
+            // 10. Speciális keringések & Keringésszabályozás (30)
+            { cat: 10, q: "Melyik érhálózat felelős maga a szívizomzat (myocardium) saját táplálásáért és oxigénellátásáért?", opts: ["Aortaív ágai", "Koszorúerek / Koronária-artériák (arteria coronaria dextra et sinistra)", "Agyartériák", "Nyirokerek"], ans: 1, exp: "A szívizmot a főutak eredésénél kilépő jobb és bal koszorúér (koronáriák) látja el." },
+            { cat: 10, q: "Mikor áramlik a legtöbb vér a bal koszorúérbe (koronáriakeringés)?", opts: ["Kamraszisztóle alatt", "Kamradiasztóle alatt (mert szisztoléban az összehúzódó szívizom préseli a saját ereit)", "Pitvari szisztoléban", "Mindig egyenletesen"], ans: 1, exp: "Kamraszisztoléban az összehúzódó szívizom elszorítja a koronáriákat, így a fő átáramlás diasztoléban zajlik." },
+            { cat: 10, q: "Mi a 'vér-agy gát' (blood-brain barrier) élettani szerepe?", opts: ["Szigeteli a szivet", "Szigorúan szabályozza az anyagok átjutását a vérből az agy szövetközi terébe (szoros endotél kapcsolatok + gliasejtek)", "Agyvérzést okoz", "Gátolja a likvorképződést"], ans: 1, exp: "A vér-agy gát megvédi az agyat a toxikus anyagoktól és ingadozásoktól." },
+            { cat: 10, q: "Mi a 'cerebrospinális folyadék' (CSF / likvor) és hol termelődik döntően?", opts: ["Nyirokfolyadék a lépben", "Agy-gerincvelői folyadék; az agykamrák érfonataiban (plexus choroideus) termelődik (~550 ml/nap)", "Vérplazma a vesében", "Epe a májban"], ans: 1, exp: "A likvor az agykamrák plexus choroideus-aiban termelődik, védelmet és táplálást nyújtva." },
+            { cat: 10, q: "Mennyi a likvor teljes térfogata az agy- és gerincvelő terekben egyidőben?", opts: ["10 ml", "kb. 150 ml", "1 liter", "5 liter"], ans: 1, exp: "Bár napi 550 ml termelődik, a folyamatos visszaszívódás miatt a jelenlévő térfogat kb. 150 ml." },
+            { cat: 10, q: "Hol szívódik vissza a likvor a vénás vérkeringésbe?", opts: ["Plexus choroideusban", "Arachnoid boholyokon (villi arachnoideae) keresztül a kemény agyhártya vénás szinuszáiba", "Vesékben", "Nyirokcsomókban"], ans: 1, exp: "A likvor az arachnoid villusokon át szívódik vissza a duralis vénás szinuszokba." },
+            { cat: 10, q: "Milyen sajátossága van a magzati keringésnek a tüdővel kapcsolatban?", opts: ["A magzat tüdeje teljes gázcserét végez", "A magzati tüdő nem működik (folyadékkal telt, nagy az ellenállása), a gázcsere a placentában zajlik", "Nincs tüdőartéria", "A magzat nem kap O2-t"], ans: 1, exp: "A magzati gázcserét a méhlepény (placenta) végzi; a tüdőkeringés nagyrészt megkerülve marad." },
+            { cat: 10, q: "Mi a 'foramen ovale' szerepe a magzati szívben?", opts: ["Nyílás a pitvari sövényen, amin át a vér a jobb pitvarból közvetlenül a bal pitvarba áramlik", "Nyílás a kamrák között", "Az aorta és tüdőartéria elzáródása", "Köldökzsinór ere"], ans: 0, exp: "A foramen ovale rövidre zárja a tüdőkeringést: a vér a jobb pitvarból átlép a bal pitvarba." },
+            { cat: 10, q: "Mi a 'ductus arteriosus (Botalli-vezeték)' szerepe a magzatban?", opts: ["Összeköti a tüdőartériát az aortával, elterelve a vért a tüdőtől", "A májat táplálja", "Köldökvénát köti a szívhez", "Vesét köti a húgyhólyaghoz"], ans: 0, exp: "A ductus arteriosus a tüdőartériából a vér zömét átvezeti az aortába." },
+            { cat: 10, q: "Milyen vért szállít a köldökvéna (vena umbilicalis) a placentából a magzat felé?", opts: ["Oxigénszegény, CO2-dús vért", "Oxigénben és tápanyagban dús vért", "Csak nyirokfolyadékot", "Vizeletet"], ans: 1, exp: "A köldökvéna szállítja az oxigén- és tápantdús friss vért a méhlepényből a magzathoz." },
+            { cat: 10, q: "Hol található a központi keringésszabályozó központ az agyban?", opts: ["Nagyagykéregben", "Nyúltvelőben (medulla oblongata)", "Kisagyban", "Gerincvelő alsó szakaszán"], ans: 1, exp: "A vegetatív keringésszabályozó központ a nyúltvelőben található (presszor és depresszor zónák)." },
+            { cat: 10, q: "Milyen receptorok érzékelik az artériás vérnyomás pillanatnyi változásait (baroreceptorok)?", opts: ["Sinus caroticus (fejverőér oszlása) és Aortaív (arcus aortae) fali receptorai", "Ízlelőbimbók", "Szem retinája", "Bőr fájdalomreceptorai"], ans: 0, exp: "A fő baroreceptor zónák a sinus caroticusban (IX. agyideg) és az aortaívben (X. agyideg) vannak." },
+            { cat: 10, q: "Mi történik reflexesen a vérnyomás hirtelen megemelkedésekor (baroreceptor reflex)?", opts: ["A presszor központ serken, vérnyomás még jobban nő", "A baroreceptorok aktiválódnak, serkentik a depresszor (vagus) központot -> lassul a szív, tágulnak az erek, esik a vérnyomás", "A szívverés leáll", "Adrenalin fröccs lép fel"], ans: 1, exp: "A baroreceptor reflex gyors negatív visszacsatolás: emelkedett nyomásra vagus-aktivációval és értágítással csökkenti a vérnyomást." },
+            { cat: 10, q: "Milyen kémiai változásokra érzékenyek a perifériás kemoreceptorok (glomus caroticum/aorticum)?", opts: ["Na+ szint csökkenése", "Vér O2-szintjének esése (hipoxia), CO2-szint emelkedése (hiperkapnia) és pH esése (savosodás)", "Cukorszint emelkedés", "Kalcium hiány"], ans: 1, exp: "A kemoreceptorok főként az oxigénhiányt (pO2 esést) és CO2 emelkedést jelzik." },
+            { cat: 10, q: "Mi a 'renin-angiotenzin-aldoszteron rendszer' (RAAS) fő hatása?", opts: ["Vérnyomás és vértérfogat emelése", "Vérnyomás csökkentése", "Szívfrekvencia felezése", "Epeelválasztás"], ans: 0, exp: "A RAAS hatékony vérnyomásemelő és Na+/víz visszatartó rendszer veseredetű ingerre." },
+            { cat: 10, q: "Melyik szerv termeli a Renin enzimet a vérnyomás vagy átáramlás esésekor?", opts: ["Máj", "Vese (juxtaglomerularis apparátus)", "Tüdő", "Szív"], ans: 1, exp: "A vese JGA sejtjei bocsátják ki a renint alacsony perfúzió esetén." },
+            { cat: 10, q: "Mi az 'Angiotenzin II' hatása az érrendszerre?", opts: ["Rendkívül erős érszűkítő (vazokonstriktor), emeli a szisztémás vérnyomást és aldoszteront szabadít fel", "Erős értágító", "Fibrint bont", "Gátolja a szívverést"], ans: 0, exp: "Az Angiotenzin II potent vazokonstriktor és serkenti a mellékvesekéreg aldoszteron-szintézisét." },
+            { cat: 10, q: "Hol termelődik az Aldoszteron hormon és mi a hatása?", opts: ["Agyalapi mirigyben", "Mellékvesekéregben; fokozza a Na+ és víz visszaszívását a vesében (emelve a vértérfogatot)", "Pajzsmirigyben", "Szívben"], ans: 1, exp: "Az aldoszteron mineralokortikoid a mellékvesekéregből, ami Na+ és vizet tart vissza." },
+            { cat: 10, q: "Mi a 'Pitvari Natriuretikus Peptid' (ANP) hatása?", opts: ["Erős érszűkítő", "A pitvarfal feszülésekor szabadul fel a szívből; fokozza a Na+ és víz ürítését a vesében (csökkenti a vérnyomást)", "Lázat okoz", "K-vitamint bont"], ans: 1, exp: "Az ANP a szív saját hormonja, ami vértérfogat- és vérnyomáscsökkentő." },
+            { cat: 10, q: "Hol termelődik a Vazopresszin (Antidiuretikus Hormon - ADH) és mi a hatása?", opts: ["Hipotalamuszban termelődik, hátsó hipofízisből ürül; fokozza a víz visszaszívását és szűkíti az ereket", "Májban termelődik", "Vesében termelődik", "Szívben termelődik"], ans: 0, exp: "Az ADH/vazopresszin vízmegtartó és érszűkítő hatású hormon." },
+            { cat: 10, q: "Mi a nitrogén-monoxid (NO) szerepe az érfalban?", opts: ["A legerősebb helyi érszűkítő", "Az endotélsejtek által termelt hatásos helyi értágító (vazodilatátor)", "Véralvadási faktor", "Gyulladáskeltő"], ans: 1, exp: "Az endoteliális NO lazítja a simaizmot, erőteljes localis értágulatot kiváltva." },
+            { cat: 10, q: "Mi történik a tüdő vascularis medrében oxigénhiány (alveoláris hipoxia) esetén?", opts: ["Értágulat (vazodilatáció)", "Érszűkület (hipoxiás pulmonalis vazokonstrikció) - hogy a vért a jól szellőző részek felé terelje!", "Nincs reakció", "Kapillárisok kidurranása"], ans: 1, exp: "A kis vérkörben a hipoxia érszűkületet okoz (ellentétben a nagy vérkörrel, ahol értágulatot)!" },
+            { cat: 10, q: "Milyen hatással van a szén-dioxid (CO2) helyi felszaporodása a vázizomzat ereire?", opts: ["Érszűkület", "Helyi értágulat (vazodilatáció), fokozva a dolgozó izom vérellátását", "Nincs hatása", "Alvadás"], ans: 1, exp: "A metabolitok (CO2, tejsav, H+) helyi értágulatot okoznak a munkát végző izomban." },
+            { cat: 10, q: "Mi a 'légzési szinusz aritmia'?", opts: ["Súlyos szívbetegség", "Élettani jelenség: belégzéskor a szívfrekvencia kissé gyorsul, kilégzéskor lassul", "Kamrafibrilláció", "EKG hiánya"], ans: 1, exp: "Belégzéskor a vagus-tónus átmenetileg csökken, így a szív kissé felgyorsul." },
+            { cat: 10, q: "Mi okozhat ájulást (syncope) hirtelen felálláskor (ortosztatikus kollapszus)?", opts: ["A vér a gravitáció miatt az alsó végtagok vénáiba zúdul, csökken a vénás visszatérés és az agyi vérnyomás", "A szív megállása", "Magas cukorszint", "Tüdő elzáródása"], ans: 0, exp: "Ortosztáziában a vénás pangás miatt átmenetileg leesik a perctérfogat és az agyi perfúzió." },
+            { cat: 10, q: "Milyen receptorszintű hatást fejt ki a koffein a szívizomra?", opts: ["Növeli az intracelluláris Ca2+ szintet és gátolja a foszfodiészterázt, fokozva a kontraktilitást és frekvenciát", "Gátolja a szívverést", "Muszkarin receptort serkent", "Gátolja az EKG-t"], ans: 0, exp: "A koffein fokozza a szarkoplazmás retikulum Ca2+ ürítését, serkentve a szívműködést." },
+            { cat: 10, q: "Milyen hatásúak a pajzsmirigyhormonok (T3, T4) a keringésre?", opts: ["Fokozzák a Beta-adrenerg receptorok számát, emelve a szívfrekvenciát és perctérfogatot", "Lassítják a szivet", "Ödémát megszüntetik", "Véralvadást gátolják"], ans: 0, exp: "A pajzsmirigyhormonok szimpatikotóniás hatásúak a szívben." },
+            { cat: 10, q: "Mi történik a szívvel a vérplazma K+ szintjének extrém megemelkedésekor (súlyos hiperkalémia)?", opts: ["Erősebb összehúzódás", "A szívizomsejtek depolarizált állapotban maradnak, ami ingerképzési zavart és szívmegállást okozhat diasztoléban", "Gyorsabb verés", "Nincs hatása"], ans: 1, exp: "A súlyos hiperkalémia kioltja a nyugalmi potenciált és diasztolés szívmegálláshoz vezet." },
+            { cat: 10, q: "Milyen hatása van a szimpatikus idegrendszernek a vázizmok és a szív koszorúereire veszély/feszültség esetén?", opts: ["Szűkíti őket", "Tágítja őket (Beta-2 adrenerg receptorokon át), biztosítva a maximális véráramlást", "Leállítja a keringésüket", "Fibrint képez"], ans: 1, exp: "Streszben a szív és vázizom erei tágulnak (Beta-2), míg a bőr és zsigerek erei szűkölnek (Alfa-1)." },
+            { cat: 10, q: "Melyik szervünkben az egyenletes véráramlás fenntartása a legszigorúbban autoregulált?", opts: ["Agy és Szívizom", "Bőr", "Lép", "Kötőszövet"], ans: 0, exp: "Az agy és a szívizom keringése mutatja a legkifejezettebb myogen és metabolikus autoregulációt." },
+
+            // 11. Az immunrendszer betegségei (30)
+            { cat: 11, q: "Milyen három fő csoportra osztjuk az immunrendszer betegségeit?", opts: ["Fertőzések, gyulladások, daganatok", "Immunhiányos állapotok, autoimmun betegségek, allergiás-atópiás kórképek", "Vérszegénység, leukémia, limfóma", "Idegrendszeri, keringési, légzőszervi"], ans: 1, exp: "Az immunbetegségek három fő kategóriája: immunhiányok, autoimmun betegségek és atópiás-allergiás kórképek." },
+            { cat: 11, q: "Mi az immunhiányos állapotok (immundefektek) közös vezető tünete?", opts: ["Folyamatos láz", "Ismételt fertőzések megjelenése (humorális és/vagy celluláris defektus miatt)", "Ízületi fájdalmak", "Magas vérnyomás"], ans: 1, exp: "Az immunhiányok közös jellemzője a védekezőképesség csökkenése miatti visszatérő vagy súlyos fertőzések." },
+            { cat: 11, q: "Milyen formái lehetnek a veleszületett aspecifikus immunhiányos állapotoknak?", opts: ["A B-sejtek túlműködése", "A granulociták hiánya, vagy ha nem tudnak fagocitálni / elpusztítani a bekebelezett baktériumokat", "Kizárólag az immunoglobulinok hiánya", "A csecsemőmirigy túltengése"], ans: 1, exp: "Az aspecifikus immunhiány okai lehetnek a granulociták hiánya, fagocitózis képtelenség vagy a baktériumölő képesség hiánya." },
+            { cat: 11, q: "Hogyan nevezzük a B-limfociták hiánya miatt kialakuló ellenanyag-hiányos állapotot?", opts: ["Agranulocytosis", "Agammaglobulinaemia", "Thrombopenia", "Leukopenia"], ans: 1, exp: "A B-limfociták hiánya az ellenanyagok (gammaglobulinok) hiányához (agammaglobulinaemia) vezet." },
+            { cat: 11, q: "Milyen fertőzésekre hajlamosít elsősorban a T-limfociták hiánya?", opts: ["Csak bakteriális fertőzésekre", "Ismételt gombás és vírusos fertőzésekre", "Kizárólag parazitákra", "Nem okoz hajlamosítást"], ans: 1, exp: "A T-sejtes (celluláris) immunhiány kifejezetten gombás és vírusos fertőzések halmozódásával jár." },
+            { cat: 11, q: "Melyik vírus okoz szerzett specifikus immunhiányos állapotot (AIDS)?", opts: ["EBV", "HIV (Human Immunodeficiency Virus)", "HPV", "Hepatitis B"], ans: 1, exp: "A HIV vírus a CD4+ T-helper sejteket pusztítva hoz létre szerzett immunhiányt." },
+            { cat: 11, q: "Melyik NEM tartozik a szerzett, átmeneti immunhiányos állapotot kiváltó tényezők közé?", opts: ["Tartós fehérjehiányos táplálkozás", "Lépeltávolítás vagy szteroid-, citosztatikus kezelés", "Vírusbetegségek (pl. bárányhimlő)", "Magas C-vitamin bevitel"], ans: 3, exp: "A fehérjehiány, citosztatikumok, lépeltávolítás és pl. a bárányhimlő mind átmeneti immunhiányt válthat ki." },
+            { cat: 11, q: "Milyen ártalom miatt válik elengedhetetlenné az elszigetelés (közösségbe nem mehet) egyes krónikus immunhiányos gyermekeknél?", opts: ["A környezeti fertőzések magas kockázata miatt", "Mert fertőzik a többi gyermeket", "A mozgásszervi bénulás miatt", "A szteroid allergia miatt"], ans: 0, exp: "A súlyos immunhiányos gyermekeket óvni kell a fertőzésektől, mert a legegyszerűbb kórokozó is életveszélyes lehet számukra." },
+            { cat: 11, q: "Mi az autoimmun reakció lényege a szervezetben?", opts: ["A szervezet túlságosan véd a külső kórokozóktól", "Az immunrendszer a saját sejteket/szöveteket testidegennek ismeri fel és megtámadja/eltávolítja azokat", "Nem keletkeznek antitestek", "A fehérvérsejtek elpusztulnak"], ans: 1, exp: "Autoimmunitás során megszűnik a saját-tolerancia, és az immunrendszer a saját struktúrákat támadja." },
+            { cat: 11, q: "Milyen autoimmun mechanizmus alapja, hogy a keringő antigén-antitest komplexek lerakódnak és károsítják az erek falát?", opts: ["Citotoxikus reakció", "Arthus-reakció (Iskémiát és kapilláris károsodást okozva)", "Késői T-sejtes reakció", "Anafilaxiás sokk"], ans: 1, exp: "Az Arthus-reakcióban az immunkomplexek az érfalban lerakódva károsítják a kapilláris keringést." },
+            { cat: 11, q: "Melyik betegség NEM a citotoxikus reakción alapuló autoimmun kórképek közé tartozik?", opts: ["Reumás láz", "Systemas lupus erythematodes (SLE)", "Rheumatoid arthritis (Arthus-reakció típusú)", "Thyroiditis"], ans: 2, exp: "A Rheumatoid arthritis az Arthus-reakción (immunkomplex lerakódáson) alapuló betegségek közé tartozik." },
+            { cat: 11, q: "Milyen két fő csoportra osztjuk az autoimmun betegségeket elhelyezkedésük alapján?", opts: ["Akut és krónikus", "Szisztémás (több szervet érintő) és Szervspecifikus kórképek", "Bakteriális és vírusos", "Felszíni és mély"], ans: 1, exp: "Az autoimmun kórképek lehetnek szisztémásak (több szervet/szövetet érintők) vagy szervspecifikusak." },
+            { cat: 11, q: "Melyik szisztémás autoimmun kórképre jellemző az arcon megjelenő 'pillangó erythema'?", opts: ["JRA", "Systemas Lupus Erythematosus (SLE)", "Scleroderma", "Dermatomyositis"], ans: 1, exp: "Az SLE egyik klasszikus és jellegzetes bőrtünete az orrnyeregen és orcákon átívelő pillangóskataszerű bőrpír." },
+            { cat: 11, q: "Milyen életkorban és nemben kezdődik tipikusan a szisztémás lupus erythematodes (SLE)?", opts: ["Csecsemőkorban, főként fiúknál", "Főképp lányoknál, általában 8 éves kor körül", "Időskorban, férfiaknál", "Kizárólag újszülötteknél"], ans: 1, exp: "Az SLE leginkább lányokat érint, a tünetek gyakran 8 éves kor körül kezdődnek." },
+            { cat: 11, q: "Melyik szerv/szövet krónikus gyulladásával és mozgáskorlátozottságával jár a JRA (Juvenilis Rheumatoid Arthritis)?", opts: ["Tüdő alveolusok", "Ízületek (térd, boka, csípő, csukló, ujjak)", "Májlebegyek", "Agykéreg"], ans: 1, exp: "A JRA a gyermekkori ízületek krónikus, deformáló és mozgáskorlátozottságot okozó autoimmun gyulladása." },
+            { cat: 11, q: "Mi jellemzi a dermatomyositis és polymyositis kórképeket?", opts: ["A csontok törékenysége", "A bőr és az alatta lévő izmok autoimmun gyulladása (vezető tünet az izomfáradékonyság)", "Pajzsmirigy túlműködés", "Magas vvt-szám"], ans: 1, exp: "A dermatomyositis a bőr és izomzat gyulladásos leépülése, ami súlyos esetben a légzőizmokat is érintheti." },
+            { cat: 11, q: "Milyen bőrtünet tekinthető a Dermatomyositis jellegzetes klinikai jelének?", opts: ["Pillangó erythema", "Gottron-papula (az ízületek feszítő felszínén)", "Csalánkiütés", "Kupffer-sejt duzzanat"], ans: 1, exp: "A Gottron-papulák a dermatomyositis patognomikus bőrtünetei az ujjak ízületei felett." },
+            { cat: 11, q: "Mi a Scleroderma (szisztémás szklerózis) lényegi patológiája?", opts: ["Az izmok és a bőr elsorvadása, az erek gyulladása és a simaizmok sklerotikussá/keménnyé válása", "Gombás fertőzés a bőrön", "Ellenanyagok teljes hiánya", "Csontvelőleállás"], ans: 0, exp: "Sclerodermában a kötőszövet felszaporodása és az erek sorvadása miatt a bőr és a belső szervek megkeményednek." },
+            { cat: 11, q: "Melyik NEM tartozik a szervspecifikus autoimmun kórképek közé?", opts: ["Basedow-kór", "Addison-kór", "Systemas lupus erythematodes (SLE)", "1-es típusú Diabetes mellitus"], ans: 2, exp: "Az SLE szisztémás autoimmun kórkép, míg a többiek egy-egy adott szervre (pajzsmirigy, mellékvese, hasnyálmirigy) korlátozódnak." },
+            { cat: 11, q: "Mi az 'atópia' kifejezés pontos jelentése?", opts: ["Lázas állapot fertőzés után", "Genetikai hajlam az allergiás betegségekre (ártalmatlan anyagokra adott túlzott reakció)", "Autoimmun ízületi gyulladás", "Fehérvérsejt-hiány"], ans: 1, exp: "Az atópia az allergiás betegségekre való örökletes hajlamot jelenti." },
+            { cat: 11, q: "Milyen immunglobulin szintek jellemzik az atópiás egyéneket?", opts: ["Magas IgA, alacsony IgE", "A nyálkahártya IgA termelése elégtelen, az IgE termelődés viszont fokozott", "Nincs semmilyen immunglobulinjuk", "Magas IgM és IgG"], ans: 1, exp: "Atópiában a nyálkahártyát védő IgA hiányos, miközben az allergiás IgE szintje kórosan magas." },
+            { cat: 11, q: "Mennyi idő alatt alakul ki a korai (I. típusú) allergiás reakció?", opts: ["24 - 48 óra múlva", "Fél órán (30 percen) belül", "Több hét alatt", "Azonnal megszűnik"], ans: 1, exp: "A korai allergiás reakció az allergén bejutását követően fél órán belül lezajlik hisztamin-felszabadulás útján." },
+            { cat: 11, q: "Milyen sejtekből szabadul fel a hisztamin a korai allergiás reakció során?", opts: ["Vörösvértestekből", "Basophil granulocitákból és hízósejtekből", "T-helper sejtekből", "Plazmasejtekből"], ans: 1, exp: "Az IgE-vel borított basophilokból és hízósejtekből másodpercek alatt hisztamin ürül." },
+            { cat: 11, q: "Milyen időlépték és mechanizmus jellemzi a késői allergiás reakciót?", opts: ["Fél óra alatt, IgE által", "Sejtközvetített (celluláris), 24-48 óra után ad reakciót (pl. Tuberculin-próba, kontakt dermatitis)", "1 perc alatt, keringő alvadási faktorokkal", "Nem jár tünetekkel"], ans: 1, exp: "A késői allergiás válasz T-sejt közvetített, és 24-48 óra múlva éri el a csúcsát." },
+            { cat: 11, q: "A gyermekek hány százaléka szenved valamilyen atópiás megbetegedésben?", opts: ["1-2%", "10-20%-a", "50-60%-a", "90%-a"], ans: 1, exp: "A gyermeki populáció mintegy 10-20%-át érintik atópiás kórképek." },
+            { cat: 11, q: "Gyermekkorból származó atópiás betegségeknél a betegek mekkora hányada gyógyul meg serdülőkorra?", opts: ["Egy sem", "A betegek kb. harmada (1/3-a)", "Mindegyik teljesen gyógyul", "90%-uk súlyosbodik"], ans: 1, exp: "Serdülőkorra az atópiás gyermekek mintegy harmada spontán tünetmentessé válik." },
+            { cat: 11, q: "Milyen típusú behatolási kapukon keresztül juthatnak be az allergének a szervezetbe?", opts: ["Kizárólag a bőrön át", "Tápcsatorna (étel), légút (inhalatív) vagy bőr (kontakt)", "Kizárólag vérátömlesztéssel", "Csak az ízületeken át"], ans: 1, exp: "Az allergének bejuthatnak belégzéssel (légút), lenyeléssel (tápcsatorna) vagy közvetlen bőrérintkezéssel." },
+            { cat: 11, q: "Melyik allergén tartozik a leggyakoribb inhalatív (belélegzett) allergének közé?", opts: ["Tehéntej és tyúktojás", "Háziporatka, pollenek, állati szőr, libatoll", "Kémiai tisztítószerek", "Eper és málna"], ans: 1, exp: "Az inhalatív allergének zömét a háziporatka, a pollenek, a Tollak és az állati szőrök teszik ki." },
+            { cat: 11, q: "Milyen diagnosztikai laboratóriumi és klinikai vizsgálatok használatosak az allergia igazolására?", opts: ["EKG és EEG", "Eosinophilia, magas IgE-szint, allergiás bőrpróbák (Prick-teszt), RAST, provokációs/eliminációs tesztek", "Röntgen és vérsüllyedés kizárólag", "Vércsoport-meghatározás"], ans: 1, exp: "Az allergia diagnosztikájában az eozinofil-szám, az IgE, a bőrtesztek (Prick) és a specifikus RAST vizsgálatok elengedhetetlenek." },
+            { cat: 11, q: "Mi a veszélye az állati savó (pl. oltóanyag) beadása után kialakuló 'szérumbetegségnek'?", opts: ["Magas vérnyomás", "Anaphylaxias reakció, Quincke-ödéma és gégeödéma (ami fulladáshoz vezethet!)", "Cukorbetegség", "Sárgaság"], ans: 1, exp: "A szérumbetegség súlyos szisztémás allergiás reakciót és életveszélyes gégeödémát válthat ki." }
+        ];
+
+        let database = rawDatabase;
+        let currentMode = "all";
+        let activeQuestions = [];
+        let userAnswers = [];
+        let zhSubmitted = false;
+        let correctCount = 0;
+
+        function handleModeChange() {
+            const val = document.getElementById("categoryFilter").value;
+            currentMode = val;
+            zhSubmitted = false;
+            document.getElementById("submitZhContainer").style.display = "none";
+            
+            if (val === "all") {
+                activeQuestions = database.map((q, idx) => ({ qObj: q, originalIndex: idx }));
+            } else {
+                activeQuestions = database
+                    .map((q, idx) => ({ qObj: q, originalIndex: idx }))
+                    .filter(item => item.qObj.cat == val);
+            }
+            
+            userAnswers = new Array(activeQuestions.length).fill(null);
+            correctCount = 0;
+            updateScore();
+            renderQuestions();
+        }
+
+        function startZhMode() {
+            currentMode = "zh";
+            zhSubmitted = false;
+            document.getElementById("categoryFilter").value = "all";
+            document.getElementById("submitZhContainer").style.display = "block";
+
+            let shuffled = database
+                .map((q, idx) => ({ qObj: q, originalIndex: idx }))
+                .sort(() => 0.5 - Math.random());
+            
+            activeQuestions = shuffled.slice(0, 10);
+            userAnswers = new Array(10).fill(null);
+            correctCount = 0;
+            
+            updateScore();
+            renderQuestions();
+        }
+
+        function renderQuestions() {
+            const container = document.getElementById("questionsContainer");
+            container.innerHTML = "";
+
+            const isZh = (currentMode === "zh");
+
+            if (isZh) {
+                const zhGroup = document.createElement("div");
+                zhGroup.className = "category-group";
+                
+                const titleDiv = document.createElement("div");
+                titleDiv.className = "category-title";
+                titleDiv.innerText = "⚡ ZH MÓD (10 véletlenszerű kérdés a 330-ból) - Jelöld meg a válaszokat, majd kattints a beküldésre!";
+                zhGroup.appendChild(titleDiv);
+
+                activeQuestions.forEach((item, qIdx) => {
+                    const card = createCard(item.qObj, qIdx, item.originalIndex, true);
+                    zhGroup.appendChild(card);
+                });
+
+                container.appendChild(zhGroup);
+            } else {
+                const categories = {
+                    1: "1. Vízterek és a vér összetétele",
+                    2: "2. Vörösvértestek & Hemoglobin",
+                    3: "3. Fehérvérsejtek & Gyulladás",
+                    4: "4. Vérlemezkék & Véralvadás",
+                    5: "5. Immunológiai alapok & Limfociták",
+                    6: "6. Vércsoportok (ABO, Rh)",
+                    7: "7. A szív anatómiája & Ingerületvezetés",
+                    8: "8. Szívciklus, EKG & Hemodinamika",
+                    9: "9. Érrendszer, Kapilláris-filtráció & Nyirok",
+                    10: "10. Speciális keringések & Keringésszabályozás",
+                    11: "11. Az immunrendszer betegségei"
+                };
+
+                const catGroup = {};
+                activeQuestions.forEach((item) => {
+                    if (!catGroup[item.qObj.cat]) catGroup[item.qObj.cat] = [];
+                    catGroup[item.qObj.cat].push(item);
+                });
+
+                for (let catId in catGroup) {
+                    const groupDiv = document.createElement("div");
+                    groupDiv.className = "category-group";
+
+                    const titleDiv = document.createElement("div");
+                    titleDiv.className = "category-title";
+                    titleDiv.innerText = categories[catId];
+                    groupDiv.appendChild(titleDiv);
+
+                    catGroup[catId].forEach((item) => {
+                        const activeIndex = activeQuestions.indexOf(item);
+                        const card = createCard(item.qObj, activeIndex, item.originalIndex, false);
+                        groupDiv.appendChild(card);
+                    });
+
+                    container.appendChild(groupDiv);
+                }
+            }
+        }
+
+        function createCard(qObj, activeIdx, originalIndex, isZh) {
+            const card = document.createElement("div");
+            card.className = "q-card";
+
+            const header = document.createElement("div");
+            header.className = "q-header";
+            
+            const numText = isZh ? `ZH / ${activeIdx + 1}. Kérdés` : `#${originalIndex + 1}`;
+            header.innerHTML = `<span class="q-number">${numText}</span><span class="q-text">${qObj.q}</span>`;
+            card.appendChild(header);
+
+            const optionsDiv = document.createElement("div");
+            optionsDiv.className = "options";
+
+            const expDiv = document.createElement("div");
+            expDiv.className = "explanation";
+            expDiv.id = `exp-${activeIdx}`;
+            expDiv.innerText = `Magyarázat: ${qObj.exp}`;
+
+            qObj.opts.forEach((optText, optIdx) => {
+                const btn = document.createElement("button");
+                btn.className = "opt-btn";
+                btn.innerText = `${String.fromCharCode(65 + optIdx)}) ${optText}`;
+
+                if (isZh) {
+                    if (!zhSubmitted) {
+                        if (userAnswers[activeIdx] === optIdx) {
+                            btn.classList.add("selected");
+                        }
+                        btn.onclick = () => {
+                            userAnswers[activeIdx] = optIdx;
+                            renderQuestions();
+                            updateScore();
+                        };
+                    } else {
+                        btn.classList.add("disabled");
+                        if (optIdx === qObj.ans) {
+                            btn.classList.add("correct");
+                        }
+                        if (userAnswers[activeIdx] === optIdx && optIdx !== qObj.ans) {
+                            btn.classList.add("incorrect");
+                        }
+                    }
+                } else {
+                    btn.onclick = () => selectOptionNormal(activeIdx, optIdx);
+
+                    if (userAnswers[activeIdx] !== null) {
+                        btn.classList.add("disabled");
+                        if (optIdx === qObj.ans) {
+                            btn.classList.add("correct");
+                        }
+                        if (userAnswers[activeIdx] === optIdx && optIdx !== qObj.ans) {
+                            btn.classList.add("incorrect");
+                        }
+                    }
+                }
+
+                optionsDiv.appendChild(btn);
+            });
+
+            card.appendChild(optionsDiv);
+            card.appendChild(expDiv);
+
+            if ((!isZh && userAnswers[activeIdx] !== null) || (isZh && zhSubmitted)) {
+                expDiv.style.display = "block";
+            }
+
+            return card;
+        }
+
+        function selectOptionNormal(activeIdx, optIdx) {
+            if (userAnswers[activeIdx] !== null) return;
+
+            userAnswers[activeIdx] = optIdx;
+            if (optIdx === activeQuestions[activeIdx].qObj.ans) {
+                correctCount++;
+            }
+
+            updateScore();
+            renderQuestions();
+        }
+
+        function submitZh() {
+            if (zhSubmitted) return;
+            zhSubmitted = true;
+            
+            correctCount = 0;
+            userAnswers.forEach((ans, idx) => {
+                if (ans === activeQuestions[idx].qObj.ans) {
+                    correctCount++;
+                }
+            });
+
+            updateScore();
+            renderQuestions();
+            alert(`ZH Befejezve!\nEredményed: ${correctCount} / 10 pont (${(correctCount/10)*100}%)`);
+        }
+
+        function updateScore() {
+            const answered = userAnswers.filter(a => a !== null).length;
+            const total = activeQuestions.length;
+            
+            if (currentMode === "zh") {
+                if (zhSubmitted) {
+                    document.getElementById("scoreBoard").innerText = `ZH Eredmény: ${correctCount} / 10 (${(correctCount/10)*100}%)`;
+                } else {
+                    document.getElementById("scoreBoard").innerText = `ZH Folyamatban: ${answered} / 10 megválaszolva`;
+                }
+            } else {
+                document.getElementById("scoreBoard").innerText = `Kitöltve: ${answered} / ${total} | Helyes: ${correctCount}`;
+            }
+        }
+
+        handleModeChange();
+    </script>
+</body>
+</html>
