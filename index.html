@@ -1,0 +1,608 @@
+<!DOCTYPE html>
+<html lang="hu">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>A vér élettana - 100 Kérdéses Adatbázis & ZH Mód</title>
+    <style>
+        :root {
+            --primary: #8b0000;
+            --primary-light: #ff4d4d;
+            --bg: #121212;
+            --surface: #1e1e1e;
+            --surface-card: #252525;
+            --text: #e0e0e0;
+            --text-muted: #a0a0a0;
+            --correct: #2e7d32;
+            --incorrect: #c62828;
+            --border: #333333;
+            --accent: #d32f2f;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--bg);
+            color: var(--text);
+            margin: 0;
+            padding: 20px;
+            line-height: 1.6;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+        }
+
+        header {
+            text-align: center;
+            padding: 20px 0;
+            border-bottom: 2px solid var(--primary);
+            margin-bottom: 30px;
+        }
+
+        h1 {
+            color: var(--primary-light);
+            margin-bottom: 5px;
+        }
+
+        .subtitle {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+        }
+
+        .controls {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 25px;
+            flex-wrap: wrap;
+            justify-content: space-between;
+            align-items: center;
+            background-color: var(--surface);
+            padding: 15px;
+            border-radius: 8px;
+            border: 1px solid var(--border);
+        }
+
+        select, button.zh-btn {
+            background-color: var(--surface-card);
+            color: var(--text);
+            border: 1px solid var(--border);
+            padding: 10px 15px;
+            border-radius: 5px;
+            font-size: 0.95rem;
+            cursor: pointer;
+        }
+
+        button.zh-btn {
+            background-color: var(--primary);
+            color: white;
+            font-weight: bold;
+            border: none;
+            transition: background 0.2s;
+        }
+
+        button.zh-btn:hover {
+            background-color: var(--primary-light);
+        }
+
+        .category-group {
+            margin-bottom: 40px;
+        }
+
+        .category-title {
+            background-color: var(--primary);
+            color: white;
+            padding: 10px 15px;
+            border-radius: 6px;
+            font-size: 1.2rem;
+            margin-bottom: 20px;
+        }
+
+        .q-card {
+            background-color: var(--surface-card);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.3);
+        }
+
+        .q-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 15px;
+        }
+
+        .q-number {
+            font-weight: bold;
+            color: var(--primary-light);
+            margin-right: 10px;
+        }
+
+        .q-text {
+            font-size: 1.05rem;
+            font-weight: 500;
+            flex-grow: 1;
+        }
+
+        .options {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            margin-top: 15px;
+        }
+
+        .opt-btn {
+            background-color: var(--surface);
+            color: var(--text);
+            border: 1px solid var(--border);
+            padding: 12px 15px;
+            border-radius: 6px;
+            text-align: left;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            font-size: 0.95rem;
+        }
+
+        .opt-btn:hover {
+            background-color: #303030;
+            border-color: #555;
+        }
+
+        .opt-btn.selected {
+            border-color: var(--primary-light);
+            background-color: #382020;
+        }
+
+        .opt-btn.correct {
+            background-color: var(--correct) !important;
+            color: white;
+            border-color: var(--correct);
+        }
+
+        .opt-btn.incorrect {
+            background-color: var(--incorrect) !important;
+            color: white;
+            border-color: var(--incorrect);
+        }
+
+        .opt-btn.disabled {
+            cursor: not-allowed;
+            opacity: 0.8;
+        }
+
+        .explanation {
+            margin-top: 15px;
+            padding: 12px;
+            background-color: #2a2a2a;
+            border-left: 4px solid var(--primary-light);
+            border-radius: 4px;
+            font-size: 0.9rem;
+            display: none;
+        }
+
+        .stats {
+            font-weight: bold;
+            color: var(--primary-light);
+        }
+
+        .submit-zh-container {
+            text-align: center;
+            margin: 30px 0;
+        }
+
+        .submit-zh-btn {
+            background-color: var(--correct);
+            color: white;
+            font-size: 1.1rem;
+            font-weight: bold;
+            padding: 15px 30px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.5);
+        }
+
+        .submit-zh-btn:hover {
+            background-color: #388e3c;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>A vér élettana & Immunológia</h1>
+            <div class="subtitle">100 feleletválasztós kérdéses adatbázis & ZH Mód</div>
+        </header>
+
+        <div class="controls">
+            <div>
+                <label for="categoryFilter">Mód / Témakör: </label>
+                <select id="categoryFilter" onchange="handleModeChange()">
+                    <option value="all">Összes témakör (100 kérdés)</option>
+                    <option value="1">1. Vízterek és a vér összetétele</option>
+                    <option value="2">2. Vörösvértestek & Hemoglobin</option>
+                    <option value="3">3. Fehérvérsejtek & Gyulladás</option>
+                    <option value="4">4. Vérlemezkék & Véralvadás</option>
+                    <option value="5">5. Immunológiai alapok & Limfociták</option>
+                    <option value="6">6. Vércsoportok (ABO, Rh)</option>
+                </select>
+            </div>
+            <button class="zh-btn" onclick="startZhMode()">⚡ Új ZH Mód (10 random kérdés)</button>
+            <div class="stats" id="scoreBoard">
+                Kitöltve: 0 / 100 | Helyes: 0
+            </div>
+        </div>
+
+        <div id="questionsContainer"></div>
+        <div id="submitZhContainer" class="submit-zh-container" style="display: none;">
+            <button class="submit-zh-btn" onclick="submitZh()">ZH Beküldése & Értékelés</button>
+        </div>
+    </div>
+
+    <script>
+        const rawDatabase = [
+            // 1. Vízterek és a vér összetétele
+            { cat: 1, q: "Egy egészséges, sovány férfi testtömegének hány százalékát alkotja folyadék?", opts: ["45%", "55%", "60%", "80%"], ans: 2, exp: "A férfiak testtömegének kb. 60%-a folyadék, míg a nőknél ez az arány kb. 55%." },
+            { cat: 1, q: "A szervezet teljes folyadéktérfogatának mekkora része található az intracelluláris térben?", opts: ["1/3 része", "1/2 része", "2/3 része", "80%-a"], ans: 2, exp: "A teljes folyadéktérfogat 2/3-a sejten belüli (intracelluláris), 1/3-a pedig sejten kívüli folyadék." },
+            { cat: 1, q: "A teljes testtömeg hány százalékát teszi ki az extracelluláris folyadék térfogata?", opts: ["4%", "16%", "20%", "60%"], ans: 2, exp: "Az extracelluláris folyadék a teljes testtömeg kb. 20%-át teszi ki." },
+            { cat: 1, q: "Az extracelluláris folyadéktér mekkora hányadát alkotja az intersticiális (szövet közötti) folyadék?", opts: ["20%", "60%", "80%", "91.5%"], ans: 2, exp: "Az extracelluláris folyadék 80%-a intersticiális folyadék, 20%-a pedig vérplazma." },
+            { cat: 1, q: "Átlagosan a teljes testtömeg hány százalékát adja maga a vér?", opts: ["4%", "8%", "12%", "20%"], ans: 1, exp: "A vér a testtömeg nagyjából 8%-át teszi ki." },
+            { cat: 1, q: "Mekkora a vérplazma átlagos aránya a teljes vértérfogathoz képest?", opts: ["37-54%", "45%", "55%", "60%"], ans: 2, exp: "A vérplazma a vér térfogatának kb. 55%-át alkotja (45% az alakos elemek aránya)." },
+            { cat: 1, q: "Mi a vérplazma legfőbb összetevője és mekkora annak az aránya?", opts: ["Fehérjék (7%)", "Víz (91,5%)", "Elektrolitok (1,5%)", "Albumin (60%)"], ans: 1, exp: "A vérplazma 91,5%-a víz, 7%-a fehérje és 1,5%-a egyéb oldott anyag." },
+            { cat: 1, q: "Melyik a legnagyobb mennyiségben jelen lévő plazmafehérje?", opts: ["Fibrinogén", "Globulinok", "Albumin", "Prothrombin"], ans: 2, exp: "Az albumin teszi ki a plazmafehérjék kb. 60%-át." },
+            { cat: 1, q: "A plazmafehérjék kb. hány százalékát teszik ki a globulinok?", opts: ["4%", "35%", "60%", "<1%"], ans: 1, exp: "A globulinok (ellenanyagok/immunglobulinok) a plazmafehérjék kb. 35%-át adják." },
+            { cat: 1, q: "Milyen szerepet tölt be a plazmafehérjék kb. 4%-át alkotó fibrinogén?", opts: ["Tápanyagszállítás", "Véralvadás", "O2-kötés", "Enzimatikus emésztés"], ans: 1, exp: "A fibrinogén a véralvadás kulcsfehérjéje, a hálóváz alapanyaga." },
+            { cat: 1, q: "Milyen normál tartományban van a fehérvérsejtek száma 1 µl vérben?", opts: ["150 000 - 400 000", "5 000 - 10 000", "4,8 - 5,4 millió", "1 000 - 3 000"], ans: 1, exp: "A normál fehérvérsejtszám 5 000 – 10 000 db / µl." },
+            { cat: 1, q: "Milyen normál tartományban található a vörösvértestek száma 1 µl vérben?", opts: ["5 000 - 10 000", "150 000 - 400 000", "4,5 - 5,4 millió", "10 - 12 millió"], ans: 2, exp: "A vörösvértestszám normál értéke körülbelül 4,5 – 5,4 millió db / µl." },
+            { cat: 1, q: "Mennyi a vérlemezkék (trombociták) normál száma mikroliterenként?", opts: ["5 000 - 10 000", "150 000 - 400 000", "1 - 2 millió", "50 000 - 100 000"], ans: 1, exp: "A vérlemezkék normál száma 150 000 – 400 000 db / µl." },
+            { cat: 1, q: "Melyik szerv felelős a felnőttkori vérképzésért (hematopoezis)?", opts: ["Máj", "Lép", "Vörös csontvelő", "Csecsemőmirigy"], ans: 2, exp: "Felnőttkorban a vérképzés kizárólag a vörös csontvelőben zajlik." },
+            { cat: 1, q: "Hol zajlik a vérképzés az embrióban a csontvelő átvétele előtt?", opts: ["Csak szikhólyagban", "Szikhólyag, máj, lép", "Csecsemőmirigy és vesék", "Agyalapi mirigy"], ans: 1, exp: "Az embrióban a szikhólyag, majd a máj és a lép végzi a vérképzést." },
+
+            // 2. Vörösvértestek & Hemoglobin
+            { cat: 2, q: "Mi a pontos élettani definíciója a hematokritnak?", opts: ["A plazmafehérjék aránya", "Az alakos elemek (főleg vvt) térfogati aránya a vérben", "A vvt-k átmérője", "A hemoglobin tömege"], ans: 1, exp: "A hematokrit az alakos elemek (gyakorlatilag vörösvértestek) térfogataránya a vérben." },
+            { cat: 2, q: "Mennyi a vörösvértestek átlagos élettartama a keringésben?", opts: ["9-11 nap", "30 nap", "120 nap", "Több mint 10 év"], ans: 2, exp: "A vörösvértestek körülbelül 120 napig keringnek a vérben." },
+            { cat: 2, q: "Milyen alaki és szerkezeti jellemzője van az érett emberi vörösvértestnek?", opts: ["Gömb alakú, magvas", "Sejtmag nélküli, bikonkáv (fánk) alakú", "Karéjos magvú, amőboid", "Magvas, csillós"], ans: 1, exp: "Az érett vörösvértest sejtmag nélküli, bikonkáv fánk alakú sejt." },
+            { cat: 2, q: "Hogyan nevezzük a sejtmagját nemrég elveszített, fiatal vörösvértestet?", opts: ["Erythroblast", "Retikulocita", "Megakariocita", "Monocita"], ans: 1, exp: "Az erythroblast magvesztése után keletkező fiatal alak a retikulocita." },
+            { cat: 2, q: "Hol és milyen ingerre termelődik az eritropoetin (EPO) hormon?", opts: ["Májban, magas O2 szintre", "Vesében, O2 hiányra (hipoxia)", "Csontvelőben, alacsony Ca2+-ra", "Lépben, fertőzésekre"], ans: 1, exp: "Az EPO a vesében termelődik válaszul a szöveti oxigénhiányra." },
+            { cat: 2, q: "Milyen szerkezetű a felnőtt hemoglobin (HbA) fehérjerésze?", opts: ["2 α és 2 β láncból álló tetramer", "4 α láncból álló fehérje", "1 α és 1 β lánc dimerje", "2 γ és 2 β lánc"], ans: 0, exp: "A felnőtt hemoglobin 4 fehérjeláncból áll: 2 alpha és 2 beta láncból (α2β2)." },
+            { cat: 2, q: "Mi adja a hem csoport oxigénkötő képességét?", opts: ["Kalciumion", "Vastartalmú porfirinváz", "Magvas enzim", "Fibrin szálak"], ans: 1, exp: "A hem egy vastartalmú (Fe2+) porfirinváz, ami reverzibilisen köti az oxigént." },
+            { cat: 2, q: "Milyen molekuláris hiba okozza a sarlósejtes vérszegénységet?", opts: ["α-lánc hiánya", "β-lánc 6. aminosavának pontmutációja", "Vasion hiánya", "Sejtmag megmaradása"], ans: 1, exp: "A sarlósejtes anaemia a hemoglobin béta-láncának 6. aminosav-pontmutációja." },
+            { cat: 2, q: "Mi a vérszegénység (anaemia) lényege?", opts: ["Magas fehérvérsejtszám", "Alacsony vvt-szám vagy Hb-tartalom (romlik az O2-ellátás)", "Vérlemezkék hiánya", "Plazma vízhiánya"], ans: 1, exp: "Az anaemia a vvt-k alacsony számára vagy hiányos hemoglobintartalmára utal." },
+            { cat: 2, q: "Hol zajlik az elöregedett vörösvértestek lebontása?", opts: ["Tüdőben és vesében", "Lép, máj és csontvelő makrofágjaiban", "Nyirokcsomókban", "Vékonybélben"], ans: 1, exp: "Az elöregedett vvt-ket a lép, a máj és a csontvelő makrofágjai kebelezik be." },
+            { cat: 2, q: "Mi lesz a hemoglobin globin részéből a lebontás során?", opts: ["Bilirubin", "Aminosavak (újrahasznosulnak)", "Urobilinogen", "Széklettel távozik"], ans: 1, exp: "A globin aminosavakra hidrolizál, amiket a szervezet újra felhasznál." },
+            { cat: 2, q: "Milyen szállítófehérje viszi a hemből származó vasat (Fe3+) a vérben?", opts: ["Ferritin", "Transferrin", "Albumin", "Trombomodulin"], ans: 1, exp: "A vasat a vérplazmában a transferrin szállítja." },
+            { cat: 2, q: "Hol és milyen formában tárolódik a felesleges vas?", opts: ["Vesében transferrinként", "Májban ferritin formájában", "Lépben bilirubinként", "Csontban urobilinként"], ans: 1, exp: "A vas a májban tárolódik ferritin formájában." },
+            { cat: 2, q: "Milyen zöldes, majd sárgás epepigmentté alakul a porfirinváz?", opts: ["Biliverdinből Bilirubin", "Stercobilinből Urobilin", "Globinból Hem", "Ferritinből Transferrin"], ans: 0, exp: "A hem porfirinváza biliverdinné, majd bilirubinná alakul át." },
+            { cat: 2, q: "Hova kerül a májból kikerülő bilirubin?", opts: ["Vizeletbe vesén át", "Epén keresztül a vékonybélbe", "Vissza csontvelőbe", "Tüdőbe kilégzésre"], ans: 1, exp: "A máj a bilirubint az epébe választja ki, így a vékonybélbe jut." },
+            { cat: 2, q: "Mi adja a széklet jellegzetes barnás színét?", opts: ["Stercobilin", "Urobilin", "Transferrin", "Bilirubin"], ans: 0, exp: "A bélbaktériumok által átalakított stercobilin adja a széklet színét." },
+            { cat: 2, q: "Melyik molekula adja a vizelet sárgás színét?", opts: ["Ferritin", "Biliverdin", "Urobilin", "Fibrin"], ans: 2, exp: "Az urobilinogen felszívódó része a vesén át urobilinként ürül." },
+
+            // 3. Fehérvérsejtek & Gyulladás
+            { cat: 3, q: "A fehérvérsejtek hány százalékát teszik ki a granulociták?", opts: ["20-30%", "50-70%", "60-80%", "<1%"], ans: 2, exp: "A granulociták a fehérvérsejtek 60–80%-át alkotják." },
+            { cat: 3, q: "Melyik a leggyakoribb granulocita típus a vérben (50-70%)?", opts: ["Eozinofil", "Bazofil", "Neutrofil", "Monocita"], ans: 2, exp: "A neutrofil granulocita a legnépesebb fehérvérsejt csoport (50-70%)." },
+            { cat: 3, q: "Milyen becenevet adnak a neutrofil granulocitáknak?", opts: ["Makrofágok", "Mikrofágok", "Plazmasejtek", "Hízósejtek"], ans: 1, exp: "A neutrofileket 'mikrofágoknak' is nevezik baktérium-fagocitáló képességük miatt." },
+            { cat: 3, q: "Milyen anyagokat tartalmaznak a neutrofil granulociták granulumai?", opts: ["Hisztamin és heparin", "Proteolitikus enzimek, lizozim, oxidánsok", "Perforin és granzim", "EPO és trombopoetin"], ans: 1, exp: "A neutrofil granulumok emésztőenzimeket, lizozimot és oxidánsokat tartalmaznak." },
+            { cat: 3, q: "Milyen állapot jele lehet a megemelkedett neutrofilszám?", opts: ["Bakteriális fertőzés, gyulladás, stressz", "Parazita fertőzés", "Allergiás sokk", "Vírusfertőzés"], ans: 0, exp: "Bakteriális fertőzések és akut gyulladások hatására a neutrofilek száma nő." },
+            { cat: 3, q: "Melyik granulocita véd a parazita fertőzések ellen?", opts: ["Neutrofil", "Eozinofil", "Bazofil", "NK-sejt"], ans: 1, exp: "Az eozinofil granulociták a paraziták elleni védekezésre specializálódtak." },
+            { cat: 3, q: "Milyen enzimet bocsátanak ki az eozinofil granulociták az allergia mérséklésére?", opts: ["Lizozim", "Hisztamináz", "Plazmin", "Kallikrein"], ans: 1, exp: "Az eozinofilek hisztaminázt szabadítanak fel, ami bontja a hisztamint." },
+            { cat: 3, q: "Melyik szöveti sejtre hasonlítanak a bazofil granulociták (<1%)?", opts: ["Fibroblasztok", "Hízósejtek", "Makrofágok", "Plazmasejtek"], ans: 1, exp: "A bazofilek a hízósejtekhez hasonlítanak, hisztamint és heparint tartalmaznak." },
+            { cat: 3, q: "Milyen hatást fejt ki a hisztamin az erekre?", opts: ["Érszűkület", "Értágulat (vazodilatáció) és áteresztőképőség-növekedés", "Véralvadás beindítása", "Sejtképzés"], ans: 1, exp: "A hisztamin értágulatot vált ki és növeli a kapillárisok permeabilitását." },
+            { cat: 3, q: "Mivé alakulnak át a monociták (2-8%) a szövetekben?", opts: ["Bazofil granulocitává", "Szöveti makrofággá", "T-limfocitává", "Vérlemezkévé"], ans: 1, exp: "A monociták a szövetekbe lépve szöveti makrofágokká alakulnak." },
+            { cat: 3, q: "Hogyan nevezzük a máj sajátos makrofágjait?", opts: ["Alveoláris makrofág", "Kupffer-sejt", "Langerhans-sejt", "Microglia"], ans: 1, exp: "A máj rögzült makrofágjai a Kupffer-sejtek." },
+            { cat: 3, q: "Milyen fertőzésnél emelkedik meg a monociták száma?", opts: ["Bakteriális fertőzés", "Vírusos és gombás fertőzések", "Súlyos vérvesztés", "Kalciumhiány"], ans: 1, exp: "A monociták magas száma vírusos vagy gombás fertőzésekre utal." },
+            { cat: 3, q: "Mi a kemotaxis jelensége?", opts: ["O2-kötés", "Irányított sejtvándorlás kémiai ingerek felé", "Elhalás", "Ellenanyag-termelés"], ans: 1, exp: "A kemotaxis a fagocitáló sejtek kémiai ingerek irányába történő mozgása." },
+            { cat: 3, q: "Melyik NEM tartozik a gyulladás 4 helyi tünete közé?", opts: ["Pír (Rubor)", "Melegség (Calor)", "Duzzanat (Tumor)", "Sápadtság (Pallor)"], ans: 3, exp: "Klasszikus tünetek: Rubor, Calor, Tumor, Dolor. A sápadtság nem az." },
+            { cat: 3, q: "Mi okozza a gyulladásos duzzanatot (tumort)?", opts: ["Vvt-k felhalmozódása", "Kiáramló vérplazma (ödéma)", "Csontvelő túltermelése", "Fibrin lebomlása"], ans: 1, exp: "Az megnövekedett kapilláris-permeabilitás miatt plazma szivárog a szövet közé." },
+            { cat: 3, q: "Melyik NEM része a nem-specifikus immunválasznak?", opts: ["Bőr és csillók", "Gyulladásos mediátorok", "B-sejtek specifikus ellenanyagai", "Neutrofilek fagocitózisa"], ans: 2, exp: "A B-sejtek ellenanyagai a specifikus (adaptív) immunválaszhoz tartoznak." },
+            { cat: 3, q: "Milyen gyors a természetes immunválasz?", opts: ["Azonnali", "1 héten belül", "Több hónap", "Csak emlékeztető oltás után"], ans: 0, exp: "A természetes immunválasz azonnal reagál." },
+            { cat: 3, q: "Hagy-e memóriát a nem-specifikus immunválasz?", opts: ["Igen", "Nem, lecseng és nincs memória", "Csak vírusnál", "Csak T-sejteknél"], ans: 1, exp: "A nem-specifikus válasz lecsengése után nem hagy maga után memóriát." },
+
+            // 4. Vérlemezkék & Véralvadás
+            { cat: 4, q: "Melyik sejt szétesésével keletkeznek a trombociták?", opts: ["Erythroblast", "Megakariocita", "Monocita", "Limfoblaszt"], ans: 1, exp: "A trombociták a megakariociták plazmájából lefűződő sejtmagtalan töredékek." },
+            { cat: 4, q: "Mennyi a vérlemezkék élettartama?", opts: ["120 nap", "9-11 nap", "<12 óra", "Több év"], ans: 1, exp: "A vérlemezkék élettartama mindössze 9–11 nap." },
+            { cat: 4, q: "Mi a hemosztázis első lépése sérüléskor?", opts: ["Fibrinolízis", "Helyi érreakció (reflexes vazokonstrikció)", "Vörös trombus", "Plazmin aktiváció"], ans: 1, exp: "Első lépés a reflexes vazokonstrikció (érszűkület)." },
+            { cat: 4, q: "Hogyan nevezzük a trombocita-reakció elsődleges alvadékát?", opts: ["Vörös trombus", "Fehér trombus (trombusdugó)", "Fibrinháló", "Plazmin alvadék"], ans: 1, exp: "A vérlemezkék összetapadásával létrejövő dugó a fehér trombus." },
+            { cat: 4, q: "Milyen anyagokat szabadítanak fel az aktivált trombociták?", opts: ["ADP, szerotonin, tromboxán A2", "Hisztamin és heparin", "EPO és bilirubin", "Transferrin és ferritin"], ans: 0, exp: "Az aktivált trombociták ADP-t, szerotonint és tromboxán A2-t bocsátanak ki." },
+            { cat: 4, q: "Hány véralvadási faktor van a kaszkádban?", opts: ["4", "8", "12", "20"], ans: 2, exp: "A véralvadási kaszkádot 12 faktor alkotja." },
+            { cat: 4, q: "Melyik ion elengedhetetlen a véralvadáshoz?", opts: ["Na+", "K+", "Ca2+", "Fe3+"], ans: 2, exp: "A kalciumionok (Ca2+) jelenléte elengedhetetlen a véralvadáshoz." },
+            { cat: 4, q: "Melyik vitamin kell az alvadási faktorok szintéziséhez?", opts: ["A-vitamin", "C-vitamin", "D-vitamin", "K-vitamin"], ans: 3, exp: "A K-vitamin elengedhetetlen az alvadási faktorok májbeli szintéziséhez." },
+            { cat: 4, q: "Mi indítja be a véralvadás 'külső útját'?", opts: ["Üvegfelület", "Sérült sejtfelszín / szöveti faktor (TF)", "I. faktor autoaktiváció", "Trombomodulin"], ans: 1, exp: "A külső utat a sérült szövetekből felszabaduló szöveti faktor indítja el." },
+            { cat: 4, q: "Melyik enzim alakítja a fibrinogént fibrinné?", opts: ["Plazmin", "Trombin", "Kallikrein", "Lizozim"], ans: 1, exp: "A trombin enzim hasítja le a fibrinogént, kialakítva a fibrin szálakat." },
+            { cat: 4, q: "Miből áll a 'vörös trombus'?", opts: ["Kizárólag trombocitákból", "Fibrinhálóból és csapdázott vvt-kből", "Mészből", "Fehérvérsejtekből"], ans: 1, exp: "A vörös trombus fibrinhálóból és abban fennmaradt vörösvértestekből áll." },
+            { cat: 4, q: "Mi marad vissza a vérből az alvadék kiválása után?", opts: ["Vérplazma", "Vérsavó (szérum)", "Intersticiális folyadék", "Nyirok"], ans: 1, exp: "Az alvadás után visszamaradó, fibrinogénmentes folyadék a vérsavó (szérum)." },
+            { cat: 4, q: "Hogyan nevezzük a fibrinszálak enzimatikus lebontását?", opts: ["Hemosztázis", "Fibrinolízis", "Aggregáció", "Phagocytosis"], ans: 1, exp: "A fibrin alvadék feloldása a fibrinolízis." },
+            { cat: 4, q: "Melyik enzim végzi a trombus megemésztését?", opts: ["Plazmin", "Trombin", "Antitrombin", "Hisztamináz"], ans: 0, exp: "A plazminogénből keletkező plazmin bontja le a fibrint." },
+            { cat: 4, q: "Milyen vegyületek gátolják in vitro a véralvadást Ca2+ megkötésével?", opts: ["Heparin", "EDTA, Na-citrát, oxalátok", "K-vitamin", "Aspirin"], ans: 1, exp: "Az EDTA, Na-citrát és oxalátok Ca2+ megkötésével gátolják az alvadást." },
+            { cat: 4, q: "Milyen hatású a patkányméreg / dikumarol?", opts: ["Ca2+ megkötő", "K-vitamin antagonista", "Trombocita-romboló", "Fibrin-oldó"], ans: 1, exp: "A dikumarol származékok K-vitamin antagonisták." },
+            { cat: 4, q: "Mi a hemofília (vérzékenység) oka?", opts: ["Magas Ca2+", "Valamelyik alvadási faktor öröklött hiánya", "Kupffer-sejtek hiánya", "C-vitamin sokk"], ans: 1, exp: "A hemofíliát valamely alvadási faktor öröklött hiánya okozza." },
+
+            // 5. Immunológiai alapok & Limfociták
+            { cat: 5, q: "Mi az antigén definíciója?", opts: ["Saját fehérje", "Molekula, amit az ellenanyagok felismernek", "Plazmafehérje", "Alvadási faktor"], ans: 1, exp: "Antigén minden olyan anyag, amit az ellenanyagok felismernek." },
+            { cat: 5, q: "Mi az epitop?", opts: ["Haptén", "Az antigén antitest-kötő felszíni része", "Fc-régió", "TCR"], ans: 1, exp: "Az antigén antitesthez kötődő felszíni része az epitop." },
+            { cat: 5, q: "Mi az immunológiai tolerancia?", opts: ["Heves válasz", "Ha az immunrendszer NEM reagál egy anyagra", "B-sejt elhalás", "Kórokozó szaporodás"], ans: 1, exp: "Tolerancia esetén az immunrendszer nem indít váreszt adott anyagra." },
+            { cat: 5, q: "Hol érnek éretté a T-limfociták?", opts: ["Csontvelőben", "Csecsemőmirigyben (Thymus)", "Lépben", "Nyirokcsomóban"], ans: 1, exp: "A T-sejtek a csecsemőmirigyben (tímuszban) érnek éretté." },
+            { cat: 5, q: "Milyen immunválaszt közvetítenek a B-limfociták?", opts: ["Sejtes (celluláris)", "Humorális (ellenanyag-közvetített)", "Nem-specifikus", "Láz"], ans: 1, exp: "A B-sejtek szekretált ellenanyagok révén a humorális válaszért felelősek." },
+            { cat: 5, q: "Mivé alakulnak az aktivált B-sejtek?", opts: ["Makrofággá", "Plazmasejtté", "T-helperré", "Megakariocitává"], ans: 1, exp: "Az aktivált B-sejtek antitesttermelő plazmasejtekké alakulnak." },
+            { cat: 5, q: "Miből áll egy IgG molekula?", opts: ["4 nehéz lánc", "2 nehéz és 2 könnyű lánc", "1 nehéz és 3 könnyű", "Szénhidrátok"], ans: 1, exp: "Az antitestek 2 egyforma nehéz (H) és 2 egyforma könnyű (L) láncból állnak." },
+            { cat: 5, q: "Az antitest melyik része köt specifikusan antigént?", opts: ["Fc régió", "Fab variábilis régiója", "Hinge régió", "CH3 tartomány"], ans: 1, exp: "Az antigénkötő helyeket a Fab régió variábilis szakasza alkotja." },
+            { cat: 5, q: "Melyik immunglobulin jut át a placentán?", opts: ["IgM", "IgA", "IgG", "IgE"], ans: 2, exp: "Kizárólag az IgG képes átjutni a placentán." },
+            { cat: 5, q: "Milyen szerkezetű az IgM?", opts: ["Monomer", "Dimer", "Pentamer (5 alapegység)", "Trimer"], ans: 2, exp: "Az IgM 5 alapegységből álló pentamer molekula." },
+            { cat: 5, q: "Melyik immunglobulin van jelen a nyálban és tejelválasztásban?", opts: ["IgA (dimer)", "IgE", "IgD", "IgG"], ans: 0, exp: "Az IgA a szekrétumok fő immunglobulinja." },
+            { cat: 5, q: "Melyik immunglobulin felelős az allergiás reakciókért?", opts: ["IgG", "IgM", "IgE", "IgA"], ans: 2, exp: "Az IgE az allergiás válaszreakciók mediátora." },
+            { cat: 5, q: "Köt-e a T-sejt receptor (TCR) szabad oldott antigént?", opts: ["Igen", "Nem, csak MHC-vel bemutatott peptidhez köt", "Csak Ca2+-al", "Csak IgM-el"], ans: 1, exp: "A T-sejtek kizárólag az MHC által bemutatott peptideket ismerik fel." },
+            { cat: 5, q: "Hol vannak MHC-I glikoproteinek?", opts: ["Csak B-sejten", "Csak makrofágon", "Szinte minden magvas sejten", "Csak vvt-n"], ans: 2, exp: "MHC-I a szervezet szinte minden magvas sejtjén jelen van." },
+            { cat: 5, q: "Hol fordulnak elő elsősorban az MHC-II molekulák?", opts: ["Minden magvas sejten", "Szívizmon", "Antigén prezentáló sejteken (APC: B-sejt, makrofág)", "Vvt-n"], ans: 2, exp: "Az MHC-II az antigén-prezentáló immunsejtekre (APC) jellemző." },
+            { cat: 5, q: "Milyen koreceptort hordoznak a T-helper sejtek?", opts: ["CD8", "CD4", "CD3", "BCR"], ans: 1, exp: "A T-helper sejtek CD4+ felszíni markerrel rendelkeznek." },
+            { cat: 5, q: "Hogyan pusztítanak a CD8+ citotoxikus T-sejtek?", opts: ["Antitestel", "Perforin és granzim útján apoptózist indukálnak", "Kemotaxissal", "Phagocytosissal"], ans: 1, exp: "A CD8+ T-sejtek perforinnal és granzimokkal apoptózist váltanak ki." },
+            { cat: 5, q: "Mi az NK-sejtek funkciója?", opts: ["Fibrin képzés", "Vírusos és tumorsejtek elpusztítása", "B-sejt gátlás", "Vas szállítás"], ans: 1, exp: "Az NK-sejtek elpusztítják a daganatos és vírusos sejteket." },
+
+            // 6. Vércsoportok
+            { cat: 6, q: "Milyen kémiai szerkezetűek az ABO antigének?", opts: ["Fehérjék", "Sejtfelszíni glikolipidek", "RNS", "Aminosavak"], ans: 1, exp: "Az ABO antigének sejtmembránban lévő glikolipidek." },
+            { cat: 6, q: "Milyen öröklődésű az A és B antigén?", opts: ["Domináns-recesszív", "Kodomináns", "X-kötött", "Intermediér"], ans: 1, exp: "Az A és B allelek egymással szemben kodominánsak." },
+            { cat: 6, q: "Milyen antigén van a '0'-s vvt felszínén?", opts: ["A antigén", "B antigén", "A és B is", "Nincs A sem B antigén"], ans: 3, exp: "A '0'-s vvt-k felszínén nincs sem A, sem B antigén." },
+            { cat: 6, q: "Milyen ellenanyag van az 'A' vércsoportú ember plazmájában?", opts: ["Anti-A", "Anti-B", "Anti-A és Anti-B", "Nincs ellenanyag"], ans: 1, exp: "Az 'A' vércsoportú egyén plazmája anti-B ellenanyagot tartalmaz." },
+            { cat: 6, q: "Milyen ellenanyag van az 'AB' vércsoportú plazmában?", opts: ["Anti-A", "Anti-B", "Anti-A és Anti-B", "Semmilyen anti-A vagy anti-B nincs"], ans: 3, exp: "Az 'AB' vércsoportú plazmában nincs anti-A és anti-B ellenanyag sem." },
+            { cat: 6, q: "Mi a transzfúzió fő aranyszabálya?", opts: ["Donor plazma szabály", "Recipiens plazma ellenanyaga nem csaphatja ki a donor vvt-antigénjeit", "Mindenki adhat mindenkinek", "Csak plazma adható"], ans: 1, exp: "Fő szabály: A recipiens ellenanyagai nem reagálhatnak a donor vvt-antigénjeivel." },
+            { cat: 6, q: "Mi történik téves transzfúziókor a donor vvt-ivel?", opts: ["Megszaporodnak", "Kicsapódnak (hemagglutináció) és szétesnek", "B-sejtté válnak", "Ca2+-t kötnek"], ans: 1, exp: "Az antitest-antigén reakció miatti kicsapódás és hemolízis következik be." },
+            { cat: 6, q: "Ki az univerzális donor (általános adó)?", opts: ["AB, Rh+", "0, Rh-", "A, Rh-", "0, Rh+"], ans: 1, exp: "A 0, Rh- nem tartalmaz A, B és D antigént sem." },
+            { cat: 6, q: "Ki az univerzális recipiens (általános kapó)?", opts: ["0, Rh-", "AB, Rh+", "B, Rh-", "AB, Rh-"], ans: 1, exp: "Az AB, Rh+ plazmájában nincs anti-A, anti-B és anti-D sem." },
+            { cat: 6, q: "Milyen öröklődésű az Rh (D) vércsoport?", opts: ["Kodomináns", "Domináns-recesszív (D domináns)", "X-kötött", "Intermediér"], ans: 1, exp: "A D allel dominánsan öröklődik a d allel felett." },
+            { cat: 6, q: "Mikor jelenik meg az anti-D egy Rh- emberben?", opts: ["Születéstől", "Soha", "Rh+ vérrel való immunizálódás (kontaktus) után", "Spontán"], ans: 1, exp: "Az Rh- szervezetben csak Rh+ vérrel való találkozás után termelődik anti-D." },
+            { cat: 6, q: "Mikor veszélyes az Rh-összeférhetetlenség?", opts: ["Rh+ anya, Rh- magzat", "Rh- anya 1. terhessége", "Rh- anya 2. (vagy többedik) Rh+ magzata", "Rh+ parents"], ans: 2, exp: "Ha az Rh- anya már immunizálódott, az anti-D átjut a 2. Rh+ magzatba." },
+            { cat: 6, q: "Hogyan előzhető meg az Rh-immunizáció?", opts: ["K-vitaminnal", "Anya passzív immunizálásával anti-D-vel szülés után", "Méhen belüli műtéttel", "Ca2+-al"], ans: 1, exp: "A szülés után adott anti-D injekció elpusztítja a bejutott magzati vvt-ket." },
+            { cat: 6, q: "Mit jelent a hemagglutináció?", opts: ["Feloldódás", "Vvt-k kicsapódása ellenanyag hatására", "Vérlemezke dugó", "Hb lebomlás"], ans: 1, exp: "A vvt-k specifikus kicsapódása antitestek jelenlétében." },
+            { cat: 6, q: "Ha egy vérminta anti-A-val kicsapódik, de anti-B-vel NEM, mi a vércsoport?", opts: ["A vércsoport", "B vércsoport", "AB vércsoport", "0 vércsoport"], ans: 0, exp: "Csak A antigén van jelen, így a vércsoport: A." }
+        ];
+
+        let database = [];
+
+        function generateFull100Database() {
+            database = [...rawDatabase];
+            const extraQuestions = [
+                { cat: 1, q: "Hány liternyi folyadék van az intracelluláris térben egy 70 kg-os férfiban?", opts: ["14 liter", "28 liter", "42 liter", "5 liter"], ans: 1, exp: "70 kg * 0.60 = 42 L teljes víz. Ennek 2/3-a = 28 liter intracelluláris." },
+                { cat: 1, q: "Hány liter vérplazmát tartalmaz egy felnőtt ember?", opts: ["~1,5 liter", "~3 liter", "~5 liter", "~8 liter"], ans: 1, exp: "A teljes vér kb. 5 liter, ennek 55%-a a plazma (~3 liter)." },
+                { cat: 1, q: "Melyik szerv termeli a plazmafehérjék többségét?", opts: ["Lép", "Vese", "Máj", "Vörös csontvelő"], ans: 2, exp: "A plazmafehérjék döntő többségét a máj szintetizálja." },
+                { cat: 1, q: "Mi az albuminok fő szerepe?", opts: ["O2-szállítás", "Onkotikus (kolloidoszmotikus) nyomás fenntartása", "Alvadás", "Antigén-bemutatás"], ans: 1, exp: "Az albuminok biztosítják a plazma kolloidoszmotikus nyomását." },
+                { cat: 2, q: "Milyen gázokat szállít a hemoglobin az O2-n kívül?", opts: ["Csak O2", "CO2 és N2-t is", "Csak CO-t", "Vizet"], ans: 1, exp: "A hemoglobin oxigént, szén-dioxidot és nitrogént is szállít." },
+                { cat: 2, q: "Hány O2 molekulát köt 1 hemoglobin?", opts: ["1", "2", "4", "8"], ans: 2, exp: "A 4 hem csoport mindegyike 1 O2-t köt, összesen 4-et." },
+                { cat: 2, q: "Melyik szerv sérülése okoz EPO-hiányos anémiát?", opts: ["Máj", "Vese", "Lép", "Gyomor"], ans: 1, exp: "Mivel az EPO a vesében képződik, veseelégtelenségben anaemia lép fel." },
+                { cat: 2, q: "Mi a ferritin funkciója?", opts: ["Vas szállítás", "Vas biztonságos raktározása", "Bilirubin bontás", "Globin bontás"], ans: 1, exp: "A ferritin a sejten belüli vasraktározó fehérje." },
+                { cat: 3, q: "Hogyan jutnak ki a fehérvérsejtek a kapillárisokból a szövetekbe (diapedesis)?", opts: ["Sejtszéteséssel", "Amőboid mozgással az endothel sejtek között", "Alvadással", "Diffúzióval"], ans: 1, exp: "A leukociták amőboid mozgással átpréselődnek az érfalon (diapedesis)." },
+                { cat: 3, q: "Melyik fehérvérsejt magja vese alakú?", opts: ["Neutrofil", "Monocita", "Limfocita", "Eozinofil"], ans: 1, exp: "A monocitákra a nagy méret és a vese/bab alakú mag jellemző." },
+                { cat: 4, q: "Mi a trombomodulin szerepe?", opts: ["Fibrin képzés", "Trombint kötve inaktiválja azt", "Trombocita aktiválás", "K-vitamin bontás"], ans: 1, exp: "A trombomodulin a trombint kötve leállítja az alvadást." },
+                { cat: 4, q: "Melyik antikoaguláns gátolja irreverzibilisen a trombint?", opts: ["Antitrombin", "Fibrinogén", "Plazminogén", "Kallikrein"], ans: 0, exp: "A plazmában lévő antitrombin irreverzibilisen inaktiválja a trombint." },
+                { cat: 5, q: "Hány évig élhetnek a memóriasejtek?", opts: ["Néhány nap", "1-2 hónap", "Több mint 10 évig (akár évtizedekig)", "120 nap"], ans: 2, exp: "A memóriasejtek gyakran évtizedekig megmaradnak." },
+                { cat: 6, q: "Milyen genotípusú lehet egy 'B' vércsoportú személy?", opts: ["BB", "BB vagy B0", "B0", "00"], ans: 1, exp: "A 'B' vércsoport lehet homozigóta (BB) vagy heterozigóta (B0)." }
+            ];
+
+            while (database.length < 100) {
+                const template = extraQuestions[database.length % extraQuestions.length];
+                database.push({
+                    ...template,
+                    q: `${template.q}`
+                });
+            }
+        }
+
+        generateFull100Database();
+
+        let currentMode = "all"; // "all", "1".."6", "zh"
+        let activeQuestions = [];
+        let userAnswers = [];
+        let zhSubmitted = false;
+        let correctCount = 0;
+
+        function handleModeChange() {
+            const val = document.getElementById("categoryFilter").value;
+            currentMode = val;
+            zhSubmitted = false;
+            document.getElementById("submitZhContainer").style.display = "none";
+            
+            if (val === "all") {
+                activeQuestions = database.map((q, idx) => ({ qObj: q, originalIndex: idx }));
+            } else {
+                activeQuestions = database
+                    .map((q, idx) => ({ qObj: q, originalIndex: idx }))
+                    .filter(item => item.qObj.cat == val);
+            }
+            
+            userAnswers = new Array(activeQuestions.length).fill(null);
+            correctCount = 0;
+            updateScore();
+            renderQuestions();
+        }
+
+        function startZhMode() {
+            currentMode = "zh";
+            zhSubmitted = false;
+            document.getElementById("categoryFilter").value = "all";
+            document.getElementById("submitZhContainer").style.display = "block";
+
+            // Random 10 kérdés kiválasztása
+            let shuffled = database
+                .map((q, idx) => ({ qObj: q, originalIndex: idx }))
+                .sort(() => 0.5 - Math.random());
+            
+            activeQuestions = shuffled.slice(0, 10);
+            userAnswers = new Array(10).fill(null);
+            correctCount = 0;
+            
+            updateScore();
+            renderQuestions();
+        }
+
+        function renderQuestions() {
+            const container = document.getElementById("questionsContainer");
+            container.innerHTML = "";
+
+            const isZh = (currentMode === "zh");
+
+            if (isZh) {
+                const zhGroup = document.createElement("div");
+                zhGroup.className = "category-group";
+                
+                const titleDiv = document.createElement("div");
+                titleDiv.className = "category-title";
+                titleDiv.innerText = "⚡ ZH MÓD (10 véletlenszerű kérdés) - Jelöld meg a válaszokat, majd kattints a beküldésre!";
+                zhGroup.appendChild(titleDiv);
+
+                activeQuestions.forEach((item, qIdx) => {
+                    const card = createCard(item.qObj, qIdx, item.originalIndex, true);
+                    zhGroup.appendChild(card);
+                });
+
+                container.appendChild(zhGroup);
+            } else {
+                const categories = {
+                    1: "1. Vízterek és a vér összetétele",
+                    2: "2. Vörösvértestek & Hemoglobin",
+                    3: "3. Fehérvérsejtek & Gyulladás",
+                    4: "4. Vérlemezkék & Véralvadás",
+                    5: "5. Immunológiai alapok & Limfociták",
+                    6: "6. Vércsoportok (ABO, Rh)"
+                };
+
+                const catGroup = {};
+                activeQuestions.forEach((item) => {
+                    if (!catGroup[item.qObj.cat]) catGroup[item.qObj.cat] = [];
+                    catGroup[item.qObj.cat].push(item);
+                });
+
+                for (let catId in catGroup) {
+                    const groupDiv = document.createElement("div");
+                    groupDiv.className = "category-group";
+
+                    const titleDiv = document.createElement("div");
+                    titleDiv.className = "category-title";
+                    titleDiv.innerText = categories[catId];
+                    groupDiv.appendChild(titleDiv);
+
+                    catGroup[catId].forEach((item, qIdxInGroup) => {
+                        const card = createCard(item.qObj, activeQuestions.indexOf(item), item.originalIndex, false);
+                        groupDiv.appendChild(card);
+                    });
+
+                    container.appendChild(groupDiv);
+                }
+            }
+        }
+
+        function createCard(qObj, activeIdx, originalIndex, isZh) {
+            const card = document.createElement("div");
+            card.className = "q-card";
+
+            const header = document.createElement("div");
+            header.className = "q-header";
+            
+            const numText = isZh ? `ZH / ${activeIdx + 1}. Kérdés` : `#${originalIndex + 1}`;
+            header.innerHTML = `<span class="q-number">${numText}</span><span class="q-text">${qObj.q}</span>`;
+            card.appendChild(header);
+
+            const optionsDiv = document.createElement("div");
+            optionsDiv.className = "options";
+
+            const expDiv = document.createElement("div");
+            expDiv.className = "explanation";
+            expDiv.id = `exp-${activeIdx}`;
+            expDiv.innerText = `Magyarázat: ${qObj.exp}`;
+
+            qObj.opts.forEach((optText, optIdx) => {
+                const btn = document.createElement("button");
+                btn.className = "opt-btn";
+                btn.innerText = `${String.fromCharCode(65 + optIdx)}) ${optText}`;
+
+                if (isZh) {
+                    if (!zhSubmitted) {
+                        if (userAnswers[activeIdx] === optIdx) {
+                            btn.classList.add("selected");
+                        }
+                        btn.onclick = () => {
+                            userAnswers[activeIdx] = optIdx;
+                            renderQuestions();
+                            updateScore();
+                        };
+                    } else {
+                        btn.classList.add("disabled");
+                        if (optIdx === qObj.ans) {
+                            btn.classList.add("correct");
+                        }
+                        if (userAnswers[activeIdx] === optIdx && optIdx !== qObj.ans) {
+                            btn.classList.add("incorrect");
+                        }
+                    }
+                } else {
+                    btn.onclick = () => selectOptionNormal(activeIdx, optIdx);
+
+                    if (userAnswers[activeIdx] !== null) {
+                        btn.classList.add("disabled");
+                        if (optIdx === qObj.ans) {
+                            btn.classList.add("correct");
+                        }
+                        if (userAnswers[activeIdx] === optIdx && optIdx !== qObj.ans) {
+                            btn.classList.add("incorrect");
+                        }
+                    }
+                }
+
+                optionsDiv.appendChild(btn);
+            });
+
+            card.appendChild(optionsDiv);
+            card.appendChild(expDiv);
+
+            if ((!isZh && userAnswers[activeIdx] !== null) || (isZh && zhSubmitted)) {
+                expDiv.style.display = "block";
+            }
+
+            return card;
+        }
+
+        function selectOptionNormal(activeIdx, optIdx) {
+            if (userAnswers[activeIdx] !== null) return;
+
+            userAnswers[activeIdx] = optIdx;
+            if (optIdx === activeQuestions[activeIdx].qObj.ans) {
+                correctCount++;
+            }
+
+            updateScore();
+            renderQuestions();
+        }
+
+        function submitZh() {
+            if (zhSubmitted) return;
+            zhSubmitted = true;
+            
+            correctCount = 0;
+            userAnswers.forEach((ans, idx) => {
+                if (ans === activeQuestions[idx].qObj.ans) {
+                    correctCount++;
+                }
+            });
+
+            updateScore();
+            renderQuestions();
+            alert(`ZH Befejezve!\nEredményed: ${correctCount} / 10 pont (${(correctCount/10)*100}%)`);
+        }
+
+        function updateScore() {
+            const answered = userAnswers.filter(a => a !== null).length;
+            const total = activeQuestions.length;
+            
+            if (currentMode === "zh") {
+                if (zhSubmitted) {
+                    document.getElementById("scoreBoard").innerText = `ZH Eredmény: ${correctCount} / 10 (${(correctCount/10)*100}%)`;
+                } else {
+                    document.getElementById("scoreBoard").innerText = `ZH Folyamatban: ${answered} / 10 megválaszolva`;
+                }
+            } else {
+                document.getElementById("scoreBoard").innerText = `Kitöltve: ${answered} / ${total} | Helyes: ${correctCount}`;
+            }
+        }
+
+        handleModeChange();
+    </script>
+</body>
+</html>
